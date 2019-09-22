@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
+import android.content.Context
+import com.qualcomm.ftccommon.SoundPlayer
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.HardwareMap
@@ -27,7 +29,13 @@ val LEFT = DriveCommand(-1.0F, 0.0F, 0.0F)
 val CLOCKWISE = DriveCommand(0.0F, 0.0F, 1.0F)
 val COUNTERCLOCKWISE = DriveCommand(0.0F, 0.0F, -1.0F)
 
+
+
+
 class HoloBot(hardwareMap: HardwareMap) {
+
+    val myApp: Context = hardwareMap.appContext
+    val params = SoundPlayer.PlaySoundParams()
 
 
     private val rightFrontDrive = hardwareMap.get(DcMotor::class.java, "rightFrontDrive")
@@ -42,6 +50,11 @@ class HoloBot(hardwareMap: HardwareMap) {
 
     val visualLocalizer = VisualLocalizer(hardwareMap)
     val motionSensor = MotionSensor(hardwareMap)
+
+    init {
+        params.loopControl = 0
+        params.waitForNonLoopingSoundsToFinish = true
+    }
 
 
     fun setLights(value: RevBlinkinLedDriver.BlinkinPattern) {
@@ -99,5 +112,23 @@ class HoloBot(hardwareMap: HardwareMap) {
             motor.targetPosition = target.toInt()
             motor.power = 1.0
         }
+    }
+
+    fun playSound(sound: Sound){
+
+        var soundID = -1
+        var soundPlaying = false
+        // obtain sound file identifier if a valid one exists
+        if (myApp.resources.getIdentifier(sound.resourceName, "raw", myApp.packageName).also { soundID = it } != 0) {
+            // Signal that the sound is now playing.
+            soundPlaying = true
+            // Start playing, and also Create a callback that will clear the playing flag when the sound is complete.
+            SoundPlayer.getInstance().startPlaying(myApp, soundID, params, null,
+                    Runnable { soundPlaying = false })
+        }
+    }
+
+    fun autoDriveTo(xTarget: Float,yTarget: Float,headingTarget: Float) {
+        TODO()
     }
 }
