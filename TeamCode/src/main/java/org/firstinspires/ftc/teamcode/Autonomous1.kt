@@ -54,7 +54,7 @@ class Autonomous1 : LinearOpMode(){
 
         //Commands for autonomous robot action go here...
 
-        // run until the end of the match (driver presses STOP)
+        // after last command, continue to run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             sleep(50)
         }
