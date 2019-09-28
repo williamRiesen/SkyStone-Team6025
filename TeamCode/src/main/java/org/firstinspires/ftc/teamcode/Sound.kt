@@ -7,7 +7,6 @@ enum class Sound(val resourceName: String) {
     DARTH_VADER("ss_darth_vader"),
     FLY_BY("ss_fly_by"),
     MF_FAIL("ss_mf_fail"),
-    LACK_OF_FAITH("lack_of_faith"),
     LASER("ss_laser"),
     LASER_BURST("ss_laser_burst"),
     LIGHT_SABER("ss_light_saber"),

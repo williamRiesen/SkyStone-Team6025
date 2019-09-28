@@ -1,4 +1,3 @@
-package org.firstinspires.ftc.teamcode
 /* Copyright (c) 2017 FIRST. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,36 +27,46 @@ package org.firstinspires.ftc.teamcode
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.util.ElapsedTime
-import com.qualcomm.robotcore.util.Range
+package org.firstinspires.ftc.teamcode
 
-@Autonomous(name = "Autonomous 2", group = "Holobot")
-//@Disabled
-class Autonomous2 : LinearOpMode(){
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import kotlin.math.atan2
+
+@TeleOp(name = "TurtleDozerTeleOp6025", group = "TurtleDozer")
+class TurtleDozerTeleOp6025 : OpMode() {
 
     lateinit var robot: TurtleDozer
 
-    override fun runOpMode() {
-
+    override fun init() {
         robot = TurtleDozer(hardwareMap)
-        telemetry.addData("Status", "Initialized")
-        telemetry.update()
+       // robot.setLights(GREEN)
+    }
 
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart()
+    override fun loop() {
+        val xInput = gamepad1.right_stick_x
+        val yInput = gamepad1.right_stick_y
+        val rotationInput = gamepad1.left_stick_x
+        val driverCommand = DriveCommand(xInput, yInput, rotationInput)
 
-        //Commands for autonomous robot action go here...
+//        val locationMatrix = robot.visualLocalizer.getLocation()
+//        if (locationMatrix != null) {
+//            val x = locationMatrix[0, 0]
+//            val y = locationMatrix[0, 1]
+//            val heading = atan2(y, x)
+//            driverCommand.rotate(heading)
+//        } else {
+            val heading = robot.motionSensor.getHeading()
+            driverCommand.rotate(heading)
+//        }
+        robot.setDriveMotion(driverCommand)
+    }
 
-        // after last command, continue to run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            sleep(50)
+    override fun stop() {
+        with(robot) {
+            stopAllMotors()
+//            visualLocalizer.close()
+            motionSensor.imu.stopAccelerationIntegration()
         }
-        robot.stopAllMotors()
     }
 }

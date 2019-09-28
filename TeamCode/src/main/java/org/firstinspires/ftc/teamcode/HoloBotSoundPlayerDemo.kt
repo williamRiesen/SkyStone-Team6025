@@ -58,7 +58,7 @@ class HoloBotSoundPlayerDemo : LinearOpMode() {
 
     // List of available sound resources
     internal var sounds = arrayOf("ss_alarm", "ss_bb8_down", "ss_bb8_up", "ss_darth_vader", "ss_fly_by",
-            "ss_mf_fail","lack_of_faith","ss_laser", "ss_laser_burst", "ss_light_saber", "ss_light_saber_long", "ss_light_saber_short",
+            "ss_mf_fail", "ss_laser", "ss_laser_burst", "ss_light_saber", "ss_light_saber_long", "ss_light_saber_short",
             "ss_light_speed", "ss_mine", "ss_power_up", "ss_r2d2_up", "ss_roger_roger", "ss_siren", "ss_wookie")
     internal var soundPlaying = false
 

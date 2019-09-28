@@ -41,11 +41,11 @@ import com.qualcomm.robotcore.util.Range
 //@Disabled
 class Autonomous1 : LinearOpMode(){
 
-    lateinit var robot: HoloBot
+    lateinit var robot: TurtleDozer
 
     override fun runOpMode() {
 
-        robot = HoloBot(hardwareMap)
+        robot = TurtleDozer(hardwareMap)
         telemetry.addData("Status", "Initialized")
         telemetry.update()
 
@@ -53,6 +53,8 @@ class Autonomous1 : LinearOpMode(){
         waitForStart()
 
         //Commands for autonomous robot action go here...
+
+
 
         // after last command, continue to run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {

@@ -36,11 +36,11 @@ import kotlin.math.atan2
 @TeleOp(name = "HolobotTeleOp", group = "Holobot")
 class HoloBotTeleOp : OpMode() {
 
-    lateinit var robot: HoloBot
+   // lateinit var robot: HoloBot
 
     override fun init() {
-        robot = HoloBot(hardwareMap)
-        robot.setLights(GREEN)
+     //   robot = HoloBot(hardwareMap)
+    //    robot.setLights(GREEN)
     }
 
     override fun loop() {
@@ -49,24 +49,24 @@ class HoloBotTeleOp : OpMode() {
         val rotationInput = gamepad1.left_stick_x
         val driverCommand = DriveCommand(xInput, yInput, rotationInput)
 
-        val locationMatrix = robot.visualLocalizer.getLocation()
-        if (locationMatrix != null) {
-            val x = locationMatrix[0, 0]
-            val y = locationMatrix[0, 1]
-            val heading = atan2(y, x)
-            driverCommand.rotate(heading)
-        } else {
-            val heading = robot.motionSensor.getHeading()
-            driverCommand.rotate(heading)
+      //  val locationMatrix = robot.visualLocalizer.getLocation()
+     //   if (locationMatrix != null) {
+       //     val x = locationMatrix[0, 0]
+       //     val y = locationMatrix[0, 1]
+       //     val heading = atan2(y, x)
+        //    driverCommand.rotate(heading)
+     //   } else {
+          //  val heading = robot.motionSensor.getHeading()
+        //    driverCommand.rotate(heading)
         }
-        robot.setDriveMotion(driverCommand)
+      //  robot.setDriveMotion(driverCommand)
     }
 
-    override fun stop() {
-        with(robot) {
-            stopAllMotors()
-            visualLocalizer.close()
-            motionSensor.imu.stopAccelerationIntegration()
-        }
-    }
-}
+  //  override fun stop() {
+     //   with(robot) {
+     //       stopAllMotors()
+    //        visualLocalizer.close()
+     //       motionSensor.imu.stopAccelerationIntegration()
+        //}
+   // }
+//}

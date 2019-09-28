@@ -11,7 +11,6 @@ class MotionSensor(hwMap: HardwareMap) {
     lateinit var imu: BNO055IMU
 
     init {
-
         // Set up the parameters with which we will use our IMU. Note that integration
         // algorithm here just reports accelerations to the logcat log; it doesn't actually
         // provide positional information.

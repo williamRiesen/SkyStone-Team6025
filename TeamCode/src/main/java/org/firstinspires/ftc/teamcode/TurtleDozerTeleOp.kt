@@ -1,4 +1,3 @@
-package org.firstinspires.ftc.teamcode
 /* Copyright (c) 2017 FIRST. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,36 +27,45 @@ package org.firstinspires.ftc.teamcode
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+package org.firstinspires.ftc.teamcode
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.util.ElapsedTime
-import com.qualcomm.robotcore.util.Range
+import kotlin.math.atan2
 
-@Autonomous(name = "Autonomous 2", group = "Holobot")
-//@Disabled
-class Autonomous2 : LinearOpMode(){
+@TeleOp(name = "TeleOp", group = "TurtleDozer")
+class TurtleDozerTeleOp : OpMode() {
 
     lateinit var robot: TurtleDozer
 
-    override fun runOpMode() {
-
+    override fun init() {
         robot = TurtleDozer(hardwareMap)
-        telemetry.addData("Status", "Initialized")
-        telemetry.update()
-
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart()
-
-        //Commands for autonomous robot action go here...
-
-        // after last command, continue to run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            sleep(50)
+        for (motor in robot.allMotors){
+            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
-        robot.stopAllMotors()
+    }
+
+
+    override fun loop() {
+        val xInput = gamepad1.right_stick_x.toDouble()
+        val yInput = gamepad1.right_stick_y.toDouble()
+        val rotationInput = gamepad1.left_stick_x.toDouble()
+        val heading = robot.motionSensor.getHeading()
+        telemetry.addData("Heading", heading)
+        telemetry.update()
+        robot.rightFrontDrive.power = (yInput + xInput) * ONE_OVER_SQRT2 + rotationInput
+        robot.leftFrontDrive.power = (-yInput + xInput)* ONE_OVER_SQRT2 + rotationInput
+        robot.rightRearDrive.power = (yInput - xInput)* ONE_OVER_SQRT2 + rotationInput
+        robot.leftRearDrive.power = (-yInput - xInput)* ONE_OVER_SQRT2 + rotationInput
+    }
+
+    override fun stop() {
+        with(robot) {
+            stopAllMotors()
+//            visualLocalizer.close()
+            motionSensor.imu.stopAccelerationIntegration()
+        }
     }
 }
