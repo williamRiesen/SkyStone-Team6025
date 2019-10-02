@@ -44,9 +44,9 @@ class HoloBotTeleOp : OpMode() {
     }
 
     override fun loop() {
-        val xInput = gamepad1.right_stick_x
-        val yInput = gamepad1.right_stick_y
-        val rotationInput = gamepad1.left_stick_x
+        val xInput = gamepad1.right_stick_x.toDouble()
+        val yInput = gamepad1.right_stick_y.toDouble()
+        val rotationInput = gamepad1.left_stick_x.toDouble()
         val driverCommand = DriveCommand(xInput, yInput, rotationInput)
 
       //  val locationMatrix = robot.visualLocalizer.getLocation()

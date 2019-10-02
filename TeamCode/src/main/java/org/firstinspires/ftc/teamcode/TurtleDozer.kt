@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode
 
 
-
 import android.content.Context
 import com.qualcomm.ftccommon.SoundPlayer
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver
@@ -10,9 +9,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import kotlin.math.*
 
 const val ONE_OVER_SQRT2 = 0.70710
-const val TICKS_PER_DEGREE_OF_PIVOT = 4050 / 90
+const val TICKS_PER_DEGREE_OF_PIVOT = 1000 / 90
 const val TICKS_PER_CM = 100
 const val TICKS_PER_INCH = 254
+const val CURVATURE = 50.0
+const val POWER_LIMIT = 0.5
 
 
 val FIRE = RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE
@@ -26,12 +27,12 @@ val STROBE_WHITE = RevBlinkinLedDriver.BlinkinPattern.STROBE_WHITE
 val YELLOW = RevBlinkinLedDriver.BlinkinPattern.YELLOW
 
 
-val FORWARD = DriveCommand(0.0F, 1.0F, 0.0F)
-val BACKWARD = DriveCommand(0.0F, -1.0F, 0.0F)
-val RIGHT = DriveCommand(1.0F, 0.0F, 0.0F)
-val LEFT = DriveCommand(-1.0F, 0.0F, 0.0F)
-val CLOCKWISE = DriveCommand(0.0F, 0.0F, 1.0F)
-val COUNTERCLOCKWISE = DriveCommand(0.0F, 0.0F, -1.0F)
+val FORWARD = DriveCommand(0.0, 1.0, 0.0)
+val BACKWARD = DriveCommand(0.0, -1.0, 0.0)
+val RIGHT = DriveCommand(1.0, 0.0, 0.0)
+val LEFT = DriveCommand(-1.0, 0.0, 0.0)
+val CLOCKWISE = DriveCommand(0.0, 0.0, 1.0)
+val COUNTERCLOCKWISE = DriveCommand(0.0, 0.0, -1.0)
 
 
 class TurtleDozer(hardwareMap: HardwareMap) {
@@ -50,12 +51,16 @@ class TurtleDozer(hardwareMap: HardwareMap) {
 
 //    val cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName())
 
-   // val visualLocalizer = VisualLocalizer(hardwareMap)
+    // val visualLocalizer = VisualLocalizer(hardwareMap)
     val motionSensor = MotionSensor(hardwareMap)
 
     init {
         params.loopControl = 0
         params.waitForNonLoopingSoundsToFinish = true
+        rightFrontDrive.targetPosition = 0
+        leftFrontDrive.targetPosition = 0
+        rightRearDrive.targetPosition = 0
+        leftRearDrive.targetPosition = 0
     }
 
 
@@ -72,17 +77,15 @@ class TurtleDozer(hardwareMap: HardwareMap) {
     fun setDriveMotion(command: DriveCommand) {
         val xSpeedScaled = command.xSpeed * ONE_OVER_SQRT2
         val ySpeedScaled = command.ySpeed * ONE_OVER_SQRT2
-        rightFrontDrive.power = xSpeedScaled + ySpeedScaled + command.rotationSpeed
-        leftFrontDrive.power = -xSpeedScaled + ySpeedScaled + command.rotationSpeed
-        rightRearDrive.power = xSpeedScaled - ySpeedScaled + command.rotationSpeed
-        leftRearDrive.power = -xSpeedScaled - ySpeedScaled + command.rotationSpeed
+        rightFrontDrive.power = -xSpeedScaled + ySpeedScaled + command.rotationSpeed
+        leftFrontDrive.power = -xSpeedScaled - ySpeedScaled + command.rotationSpeed
+        rightRearDrive.power = xSpeedScaled + ySpeedScaled + command.rotationSpeed
+        leftRearDrive.power = xSpeedScaled - ySpeedScaled + command.rotationSpeed
     }
 
+
     fun driveByEncoder(xCM: Float, yCM: Float) {
-        for (motor in allMotors) {
-            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-            motor.mode = DcMotor.RunMode.RUN_TO_POSITION
-        }
+
         val x = xCM * TICKS_PER_CM
         val y = yCM * TICKS_PER_CM
         val rightFront = (x + y) * ONE_OVER_SQRT2
@@ -90,12 +93,22 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         val rightRear = (x - y) * ONE_OVER_SQRT2
         val leftRear = (-x - y) * ONE_OVER_SQRT2
 
+        for (motor in allMotors) {
+            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            motor.mode = DcMotor.RunMode.RUN_TO_POSITION
+        }
+
         rightFrontDrive.targetPosition = rightFront.toInt()
         leftFrontDrive.targetPosition = leftFront.toInt()
         rightRearDrive.targetPosition = rightRear.toInt()
         leftRearDrive.targetPosition = leftRear.toInt()
 
-        for (motor in allMotors) motor.power = 1.0
+
+        for (motor in allMotors) motor.power = POWER_LIMIT
+        while (motorsBusy){
+            Thread.sleep(50)
+        }
+
     }
 
     fun rotate(degrees: Float) {
@@ -104,7 +117,10 @@ class TurtleDozer(hardwareMap: HardwareMap) {
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             motor.mode = DcMotor.RunMode.RUN_TO_POSITION
             motor.targetPosition = target.toInt()
-            motor.power = 1.0
+            motor.power = POWER_LIMIT
+        }
+        while (motorsBusy){
+            Thread.sleep(50)
         }
     }
 
@@ -152,11 +168,17 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         rightRearDrive.power = rollingComponentLeftFront / groundPathLength
         leftRearDrive.power = rollingComponentRightFront / groundPathLength
 
-        val myPosition = Position(1.0F,2.0F,3.0F)
-
-
+        val myPosition = Position(1.0F, 2.0F, 3.0F)
     }
 
+    val motorsBusy: Boolean
+        get() {
+            var checkMotor = false
+            for (motor in allMotors) {
+                if (motor.isBusy) checkMotor = true
+            }
+            return checkMotor
+        }
 
 
 //    fun autoDriveTo(targetPosition: Position) {

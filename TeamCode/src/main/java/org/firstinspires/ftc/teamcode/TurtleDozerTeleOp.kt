@@ -50,15 +50,14 @@ class TurtleDozerTeleOp : OpMode() {
 
     override fun loop() {
         val xInput = gamepad1.right_stick_x.toDouble()
-        val yInput = gamepad1.right_stick_y.toDouble()
+        val yInput = -gamepad1.right_stick_y.toDouble()
         val rotationInput = gamepad1.left_stick_x.toDouble()
         val heading = robot.motionSensor.getHeading()
         telemetry.addData("Heading", heading)
         telemetry.update()
-        robot.rightFrontDrive.power = (yInput + xInput) * ONE_OVER_SQRT2 + rotationInput
-        robot.leftFrontDrive.power = (-yInput + xInput)* ONE_OVER_SQRT2 + rotationInput
-        robot.rightRearDrive.power = (yInput - xInput)* ONE_OVER_SQRT2 + rotationInput
-        robot.leftRearDrive.power = (-yInput - xInput)* ONE_OVER_SQRT2 + rotationInput
+        val driveCommand = DriveCommand(xInput,yInput,rotationInput )
+        driveCommand.rotate(-heading)
+        robot.setDriveMotion(driveCommand)
     }
 
     override fun stop() {

@@ -16,7 +16,7 @@ class MotionSensor(hwMap: HardwareMap) {
         // provide positional information.
 
         val parameters = Parameters()
-        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES
+        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS
         parameters.accelUnit = AccelUnit.METERS_PERSEC_PERSEC
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"
         parameters.loggingEnabled = true
@@ -28,7 +28,7 @@ class MotionSensor(hwMap: HardwareMap) {
     }
 
     fun getHeading(): Float {
-        val angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES)
+        val angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS)
         return angles.firstAngle
     }
 }
