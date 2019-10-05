@@ -33,16 +33,17 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import kotlin.math.PI
-import kotlin.math.absoluteValue
 import kotlin.math.atan2
 
-@TeleOp(name = "TeleOpPointScooch", group = "TurtleDozer")
-class TeleOpPointScootch : OpMode() {
+const val THREE_PI_OVER_TWO = PI * 1.5
+const val PI_OVER_TWO = 0.5 * PI
 
-    lateinit var robot: TurtleDozer
-    var turn = 0.0
-    var heading = 0.0
-    var bearing = 0.0
+@TeleOp(name = "TeleOpPointScooch", group = "TurtleDozer")
+class TeleOpPointScooch : OpMode() {
+
+    private lateinit var robot: TurtleDozer
+    private var angle = 0.0
+    private var bearing = 0.0
 
     override fun init() {
         robot = TurtleDozer(hardwareMap)
@@ -52,7 +53,6 @@ class TeleOpPointScootch : OpMode() {
         }
     }
 
-
     override fun loop() {
         val xStick = gamepad1.right_stick_x.toDouble()
         var yStick = -gamepad1.right_stick_y.toDouble()
@@ -60,22 +60,28 @@ class TeleOpPointScootch : OpMode() {
         val yScooch = -gamepad1.left_stick_y.toDouble()
         val heading = robot.motionSensor.getHeading()
 
-        // determine bearing to target
-        if (xStick != 0.0 || yStick != 0.0) {
+        if (xStick == 0.0 && yStick == 0.0) angle = 0.0
+        else {
             if (yStick == -0.0) yStick = 0.0
             bearing = atan2(-xStick, yStick)
-            turn = (bearing - heading) / (PI)
-        }else turn = 0.0
+            val adjustedHeading = heading + PI
+            val adjustedBearing = bearing + PI
+
+            angle = (adjustedBearing - adjustedHeading) % PI
+
+            if (angle > THREE_PI_OVER_TWO) angle -= 2.0 * PI
+            if (angle > PI_OVER_TWO) angle -= PI
+        }
 
         telemetry.addData("Heading", heading)
         telemetry.addData("Bearing", bearing)
-        telemetry.addData("Turn", turn)
+        telemetry.addData("Angle", angle)
         telemetry.update()
 
-
-        val driveCommand = DriveCommand(xStick, yStick, turn)
+        val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, angle / PI)
         driveCommand.rotate(-heading)
         robot.setDriveMotion(driveCommand)
+
     }
 
     override fun stop() {

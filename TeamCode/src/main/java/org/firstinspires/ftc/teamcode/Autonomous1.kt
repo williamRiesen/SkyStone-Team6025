@@ -54,11 +54,17 @@ class Autonomous1 : LinearOpMode(){
         waitForStart()
 
         //Commands for autonomous robot action go here...
-        robot.driveByEncoder(25f,0f)
 
-        robot.rotate(180f)
-        robot.driveByEncoder(25f,0f)
-
+        robot.driveByEncoder(30f,0f)
+        robot.driveByEncoder(-18f,36f)
+//
+//        robot.rotate(90f)
+//
+//        robot.driveByEncoder(25f,0f)
+//
+//        robot.rotate(90f)
+//
+//        robot.driveByEncoder(25f,0f)
 
         // after last command, continue to run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {

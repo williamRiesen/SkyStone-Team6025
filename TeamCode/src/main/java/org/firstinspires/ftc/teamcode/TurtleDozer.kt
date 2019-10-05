@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import kotlin.math.*
 
 const val ONE_OVER_SQRT2 = 0.70710
-const val TICKS_PER_DEGREE_OF_PIVOT = 1000 / 90
+const val TICKS_PER_DEGREE_OF_PIVOT = 1200 / 90
 const val TICKS_PER_CM = 100
 const val TICKS_PER_INCH = 254
 const val CURVATURE = 50.0
