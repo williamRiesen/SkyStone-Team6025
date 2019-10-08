@@ -29,7 +29,7 @@ class MotionSensor(hwMap: HardwareMap) {
 
     fun getHeading(): Float {
         val angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS)
-        return angles.firstAngle
+        return - angles.firstAngle
     }
 }
 

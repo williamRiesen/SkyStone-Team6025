@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode
 
 enum class Sound(val resourceName: String) {
     ALARM("ss_alarm"),
+    LACK_OF_FAITH("lack_of_faith.wav"),
     BB8DOWN("ss_bb8_down"),
     BB8UP("ss_bb8_up"),
     DARTH_VADER("ss_darth_vader"),

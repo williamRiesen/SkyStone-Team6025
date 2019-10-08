@@ -37,13 +37,18 @@ import kotlin.math.atan2
 
 const val THREE_PI_OVER_TWO = PI * 1.5
 const val PI_OVER_TWO = 0.5 * PI
+const val TWO_PI = PI * 2.0
+const val FOUR_PI_OVER_SIX = 5 * PI / 6.0
+const val EIGHT_PI_OVER_SIX = 8 * PI/ 6.0
+const val ROTATION_SPEED_ADJUST = 0.25
 
 @TeleOp(name = "TeleOpPointScooch", group = "TurtleDozer")
 class TeleOpPointScooch : OpMode() {
 
     private lateinit var robot: TurtleDozer
-    private var angle = 0.0
+    private var relativeBearing = 0.0
     private var bearing = 0.0
+    private var rotation = 0.0
 
     override fun init() {
         robot = TurtleDozer(hardwareMap)
@@ -60,29 +65,51 @@ class TeleOpPointScooch : OpMode() {
         val yScooch = -gamepad1.left_stick_y.toDouble()
         val heading = robot.motionSensor.getHeading()
 
-        if (xStick == 0.0 && yStick == 0.0) angle = 0.0
-        else {
+
+        if (xStick == 0.0 && yStick == 0.0) {
+            bearing = 0.0
+            rotation = 0.0
+
+        } else {
             if (yStick == -0.0) yStick = 0.0
-            bearing = atan2(-xStick, yStick)
-            val adjustedHeading = heading + PI
-            val adjustedBearing = bearing + PI
+            bearing = atan2(xStick, yStick)
 
-            angle = (adjustedBearing - adjustedHeading) % PI
+            relativeBearing = calculateRelativeBearing(bearing, heading.toDouble())
 
-            if (angle > THREE_PI_OVER_TWO) angle -= 2.0 * PI
-            if (angle > PI_OVER_TWO) angle -= PI
+            rotation = when (relativeBearing) {
+                in 0.0..FOUR_PI_OVER_SIX -> relativeBearing
+                in EIGHT_PI_OVER_SIX..TWO_PI -> relativeBearing - TWO_PI
+                else -> relativeBearing - PI
+            }
         }
 
         telemetry.addData("Heading", heading)
         telemetry.addData("Bearing", bearing)
-        telemetry.addData("Angle", angle)
+        telemetry.addData("Relative Bearing", relativeBearing)
+        telemetry.addData("Rotation", rotation)
         telemetry.update()
 
-        val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, angle / PI)
+//        val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, rotation / 10.0)
+
+        val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, rotation * ROTATION_SPEED_ADJUST)
         driveCommand.rotate(-heading)
         robot.setDriveMotion(driveCommand)
 
     }
+
+
+    fun modulo(a: Double, b: Double) = (a % b + b) % b
+
+    fun calculateRelativeBearing(bearing: Double, heading: Double): Double {
+//        if ((bearing - heading) < -PI) {
+//            return TWO_PI + bearing - heading
+//        } else if ((bearing - heading) > PI) {
+//            return TWO_PI - (bearing - heading)
+//        } else
+//            return bearing - heading
+        return modulo((bearing - heading), TWO_PI)
+    }
+
 
     override fun stop() {
         with(robot) {

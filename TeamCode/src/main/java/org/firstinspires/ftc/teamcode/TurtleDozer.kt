@@ -77,10 +77,10 @@ class TurtleDozer(hardwareMap: HardwareMap) {
     fun setDriveMotion(command: DriveCommand) {
         val xSpeedScaled = command.xSpeed * ONE_OVER_SQRT2
         val ySpeedScaled = command.ySpeed * ONE_OVER_SQRT2
-        rightFrontDrive.power = -xSpeedScaled + ySpeedScaled + command.rotationSpeed
-        leftFrontDrive.power = -xSpeedScaled - ySpeedScaled + command.rotationSpeed
-        rightRearDrive.power = xSpeedScaled + ySpeedScaled + command.rotationSpeed
-        leftRearDrive.power = xSpeedScaled - ySpeedScaled + command.rotationSpeed
+        rightFrontDrive.power = -xSpeedScaled + ySpeedScaled - command.rotationSpeed
+        leftFrontDrive.power = -xSpeedScaled - ySpeedScaled - command.rotationSpeed
+        rightRearDrive.power = xSpeedScaled + ySpeedScaled - command.rotationSpeed
+        leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
     }
 
 
