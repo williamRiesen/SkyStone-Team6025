@@ -77,9 +77,8 @@ class TeleOpPointScooch : OpMode() {
             relativeBearing = calculateRelativeBearing(bearing, heading.toDouble())
 
             rotation = when (relativeBearing) {
-                in 0.0..FOUR_PI_OVER_SIX -> relativeBearing
-                in EIGHT_PI_OVER_SIX..TWO_PI -> relativeBearing - TWO_PI
-                else -> relativeBearing - PI
+                in 0.0..PI -> relativeBearing
+                else -> relativeBearing - TWO_PI
             }
         }
 
@@ -92,7 +91,7 @@ class TeleOpPointScooch : OpMode() {
 //        val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, rotation / 10.0)
 
         val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, rotation * ROTATION_SPEED_ADJUST)
-        driveCommand.rotate(-heading)
+        driveCommand.rotate(heading)
         robot.setDriveMotion(driveCommand)
 
     }
