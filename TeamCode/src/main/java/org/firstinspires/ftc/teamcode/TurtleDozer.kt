@@ -6,15 +6,15 @@ import com.qualcomm.ftccommon.SoundPlayer
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.Servo
 import kotlin.math.*
 
 const val ONE_OVER_SQRT2 = 0.70710
 const val TICKS_PER_DEGREE_OF_PIVOT = 1200 / 90
 const val TICKS_PER_CM = 100
-const val TICKS_PER_INCH = 254
+const val TICKS_PER_INCH = 128
 const val CURVATURE = 50.0
 const val POWER_LIMIT = 0.5
-
 
 val FIRE = RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE
 val STROBE_RED = RevBlinkinLedDriver.BlinkinPattern.STROBE_RED
@@ -26,7 +26,6 @@ val RED = RevBlinkinLedDriver.BlinkinPattern.RED
 val STROBE_WHITE = RevBlinkinLedDriver.BlinkinPattern.STROBE_WHITE
 val YELLOW = RevBlinkinLedDriver.BlinkinPattern.YELLOW
 
-
 val FORWARD = DriveCommand(0.0, 1.0, 0.0)
 val BACKWARD = DriveCommand(0.0, -1.0, 0.0)
 val RIGHT = DriveCommand(1.0, 0.0, 0.0)
@@ -34,18 +33,31 @@ val LEFT = DriveCommand(-1.0, 0.0, 0.0)
 val CLOCKWISE = DriveCommand(0.0, 0.0, 1.0)
 val COUNTERCLOCKWISE = DriveCommand(0.0, 0.0, -1.0)
 
-
 class TurtleDozer(hardwareMap: HardwareMap) {
 
     val myApp: Context = hardwareMap.appContext
     val params = SoundPlayer.PlaySoundParams()
-
 
     val rightFrontDrive = hardwareMap.get(DcMotor::class.java, "rightFrontDrive")
     val leftFrontDrive = hardwareMap.get(DcMotor::class.java, "leftFrontDrive")
     val rightRearDrive = hardwareMap.get(DcMotor::class.java, "rightRearDrive")
     val leftRearDrive = hardwareMap.get(DcMotor::class.java, "leftRearDrive")
     val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
+
+    val tailhook = hardwareMap.get(Servo::class.java, "tailhook")
+
+//    val hingeJoint = try {
+//        hardwareMap.get(Servo::class.java, "hingeJoint")
+//    } catch (e: IllegalArgumentException) {
+//    }
+//
+////    val viceGrip = try {
+//        hardwareMap.get(Servo::class.java, "viceGrip")
+//    } catch (e: IllegalArgumentException) {
+////        null
+////    }
+//
+//    val allServo = listOf(hingeJoint, viceGrip)
 
 //    private val blinkyLights = hardwareMap.get(RevBlinkinLedDriver::class.java, "blinkin")
 
@@ -61,6 +73,7 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         leftFrontDrive.targetPosition = 0
         rightRearDrive.targetPosition = 0
         leftRearDrive.targetPosition = 0
+
     }
 
 
@@ -71,6 +84,8 @@ class TurtleDozer(hardwareMap: HardwareMap) {
     fun stopAllMotors() {
         for (motor in allMotors) {
             motor.power = 0.0
+//            for (servo in allServo)
+//                servo.position = 0.0
         }
     }
 
@@ -83,15 +98,13 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
     }
 
-
-    fun driveByEncoder(xCM: Float, yCM: Float) {
-
-        val x = xCM * TICKS_PER_CM
-        val y = yCM * TICKS_PER_CM
-        val rightFront = (x + y) * ONE_OVER_SQRT2
-        val leftFront = (-x + y) * ONE_OVER_SQRT2
-        val rightRear = (x - y) * ONE_OVER_SQRT2
-        val leftRear = (-x - y) * ONE_OVER_SQRT2
+    fun driveByEncoder(vector: Vector) {
+        val x = vector.x * TICKS_PER_INCH
+        val y = vector.y * TICKS_PER_INCH
+        val rightFront = (-x + y) * ONE_OVER_SQRT2
+        val leftFront = (-x - y) * ONE_OVER_SQRT2
+        val rightRear = (x + y) * ONE_OVER_SQRT2
+        val leftRear = (x - y) * ONE_OVER_SQRT2
 
         for (motor in allMotors) {
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -103,23 +116,22 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         rightRearDrive.targetPosition = rightRear.toInt()
         leftRearDrive.targetPosition = leftRear.toInt()
 
+        for (motor in allMotors) motor.power = vector.speed
 
-        for (motor in allMotors) motor.power = POWER_LIMIT
-        while (motorsBusy){
+        while (motorsBusy) {
             Thread.sleep(50)
         }
-
     }
 
-    fun rotate(degrees: Float) {
+    fun rotate(degrees: Int) {
         val target = degrees * TICKS_PER_DEGREE_OF_PIVOT
         for (motor in allMotors) {
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             motor.mode = DcMotor.RunMode.RUN_TO_POSITION
-            motor.targetPosition = target.toInt()
+            motor.targetPosition = target
             motor.power = POWER_LIMIT
         }
-        while (motorsBusy){
+        while (motorsBusy) {
             Thread.sleep(50)
         }
     }
@@ -151,7 +163,6 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         val groundPathLength = sqrt(xInches * xInches + yInches * yInches)
         val directionOfTravel = atan2(xInches, yInches)
 
-
         val rollingComponentRightFront = groundPathLength * sin(directionOfTravel - PI / 4.0)// also applies to left rear
         val rollingComponentLeftFront = groundPathLength * cos(directionOfTravel - PI / 4.0)// also applies to right rear
 
@@ -169,6 +180,15 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         leftRearDrive.power = rollingComponentRightFront / groundPathLength
 
         val myPosition = Position(1.0F, 2.0F, 3.0F)
+
+    }
+
+    fun deployHook() {
+        tailhook.position = 0.0
+    }
+
+    fun unlatchHook() {
+        tailhook.position = 0.5
     }
 
     val motorsBusy: Boolean

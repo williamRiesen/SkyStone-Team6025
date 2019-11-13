@@ -35,11 +35,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import kotlin.math.PI
 import kotlin.math.atan2
 
-const val THREE_PI_OVER_TWO = PI * 1.5
-const val PI_OVER_TWO = 0.5 * PI
 const val TWO_PI = PI * 2.0
-const val FOUR_PI_OVER_SIX = 5 * PI / 6.0
-const val EIGHT_PI_OVER_SIX = 8 * PI/ 6.0
 const val ROTATION_SPEED_ADJUST = 0.25
 
 @TeleOp(name = "TeleOpPointScooch", group = "TurtleDozer")
@@ -59,6 +55,15 @@ class TeleOpPointScooch : OpMode() {
     }
 
     override fun loop() {
+        if (gamepad2.dpad_down) {
+            robot.tailhook.position = 0.0
+        }
+
+        if (gamepad2.dpad_up) {
+            robot.tailhook.position = 0.5
+        }
+
+
         val xStick = gamepad1.right_stick_x.toDouble()
         var yStick = -gamepad1.right_stick_y.toDouble()
         val xScooch = gamepad1.left_stick_x.toDouble()
@@ -88,27 +93,15 @@ class TeleOpPointScooch : OpMode() {
         telemetry.addData("Rotation", rotation)
         telemetry.update()
 
-//        val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, rotation / 10.0)
-
         val driveCommand = DriveCommand(xStick + xScooch, yStick + yScooch, rotation * ROTATION_SPEED_ADJUST)
         driveCommand.rotate(heading)
         robot.setDriveMotion(driveCommand)
-
     }
 
 
-    fun modulo(a: Double, b: Double) = (a % b + b) % b
+    private fun modulo(a: Double, b: Double) = (a % b + b) % b
 
-    fun calculateRelativeBearing(bearing: Double, heading: Double): Double {
-//        if ((bearing - heading) < -PI) {
-//            return TWO_PI + bearing - heading
-//        } else if ((bearing - heading) > PI) {
-//            return TWO_PI - (bearing - heading)
-//        } else
-//            return bearing - heading
-        return modulo((bearing - heading), TWO_PI)
-    }
-
+    private fun calculateRelativeBearing(bearing: Double, heading: Double) = modulo((bearing - heading), TWO_PI)
 
     override fun stop() {
         with(robot) {
@@ -118,6 +111,3 @@ class TeleOpPointScooch : OpMode() {
         }
     }
 }
-
-
-//

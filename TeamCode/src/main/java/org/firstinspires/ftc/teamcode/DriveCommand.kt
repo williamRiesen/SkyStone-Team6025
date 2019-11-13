@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode
 
-// comment added to test version control
-
 import kotlin.math.cos
 import kotlin.math.sin
 

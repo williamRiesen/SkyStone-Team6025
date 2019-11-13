@@ -1,4 +1,3 @@
-package org.firstinspires.ftc.teamcode
 /* Copyright (c) 2017 FIRST. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,48 +27,64 @@ package org.firstinspires.ftc.teamcode
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+package org.firstinspires.ftc.teamcode
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.util.ElapsedTime
-import com.qualcomm.robotcore.util.Range
 import kotlin.math.PI
+import kotlin.math.atan2
 
-@Autonomous(name = "Autonomous 1", group = "Holobot")
-//@Disabled
-class Autonomous1 : LinearOpMode(){
 
-    lateinit var robot: TurtleDozer
+@TeleOp(name = "TeleOp", group = "TurtleDozer")
+class TeleOp : OpMode() {
 
-    override fun runOpMode() {
+    val TWO_PI = PI * 2.0
+    val ROTATION_SPEED_ADJUST = 0.25
 
+    private lateinit var robot: TurtleDozer
+    private var relativeBearing = 0.0
+    private var bearing = 0.0
+    private var rotation = 0.0
+
+    override fun init() {
         robot = TurtleDozer(hardwareMap)
-        telemetry.addData("Status", "Initialized")
+        for (motor in robot.allMotors) {
+            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        }
+    }
+
+    override fun loop() {
+        if (gamepad2.dpad_down) {
+            robot.tailhook.position = 0.0
+        }
+
+        if (gamepad2.dpad_up) {
+            robot.tailhook.position = 0.5
+        }
+
+        val rotation = gamepad1.left_stick_x.toDouble()
+        val xScooch = gamepad1.right_stick_x.toDouble()
+        val yScooch = -gamepad1.right_stick_y.toDouble()
+        val heading = robot.motionSensor.getHeading()
+
+        telemetry.addData("Heading", heading)
+        telemetry.addData("Bearing", bearing)
+        telemetry.addData("Relative Bearing", relativeBearing)
+        telemetry.addData("Rotation", rotation)
         telemetry.update()
 
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart()
+        val driveCommand = DriveCommand(xScooch, yScooch, rotation * ROTATION_SPEED_ADJUST)
+        driveCommand.rotate(heading)
+        robot.setDriveMotion(driveCommand)
+    }
 
-        //Commands for autonomous robot action go here...
-
-        robot.driveByEncoder(30f,0f)
-        robot.driveByEncoder(-18f,36f)
-//
-//        robot.rotate(90f)
-//
-//        robot.driveByEncoder(25f,0f)
-//
-//        robot.rotate(90f)
-//
-//        robot.driveByEncoder(25f,0f)
-
-        // after last command, continue to run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            sleep(50)
+    override fun stop() {
+        with(robot) {
+            stopAllMotors()
+//            visualLocalizer.close()
+            motionSensor.imu.stopAccelerationIntegration()
         }
-        robot.stopAllMotors()
     }
 }

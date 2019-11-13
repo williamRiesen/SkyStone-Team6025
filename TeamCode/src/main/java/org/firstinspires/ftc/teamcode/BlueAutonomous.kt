@@ -1,3 +1,5 @@
+package org.firstinspires.ftc.teamcode
+
 /* Copyright (c) 2017 FIRST. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -27,44 +29,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.DcMotor
-import kotlin.math.atan2
 
-@TeleOp(name = "TurtleDozerTeleOp", group = "TurtleDozer")
-class TurtleDozerTeleOp : OpMode() {
+@Autonomous(name = "Blue Autonomous", group = "Holobot")
+//@Disabled
+
+
+class BlueAutonomous : LinearOpMode() {
+
 
     lateinit var robot: TurtleDozer
 
-    override fun init() {
+    override fun runOpMode() {
+
         robot = TurtleDozer(hardwareMap)
-        for (motor in robot.allMotors){
-            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-            motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
-        }
-    }
 
 
-    override fun loop() {
-        val xInput = gamepad1.right_stick_x.toDouble()
-        val yInput = -gamepad1.right_stick_y.toDouble()
-        val rotationInput = gamepad1.left_stick_x.toDouble()
-        val heading = robot.motionSensor.getHeading()
-        telemetry.addData("Heading", heading)
+
+
+        telemetry.addData("Status", "Initialized")
         telemetry.update()
-        val driveCommand = DriveCommand(xInput,yInput,rotationInput )
-        driveCommand.rotate(-heading)
-        robot.setDriveMotion(driveCommand)
-    }
 
-    override fun stop() {
-        with(robot) {
-            stopAllMotors()
-//            visualLocalizer.close()
-            motionSensor.imu.stopAccelerationIntegration()
+        // Wait for the game to start (driver presses PLAY)
+        waitForStart()
+
+        //Commands for autonomous robot action go here...
+
+        val MOVE_NEXT_TO_FOUNDATION = Vector(18, -18)
+        val ADVANCE_TO_LATCH_FOUNDATION = Vector(0,-4,0.1)
+        val TOW_INTO_BUILDING_ZONE = Vector(0,18, 0.25)
+        val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (-24,0)
+
+
+        robot.driveByEncoder(MOVE_NEXT_TO_FOUNDATION)
+        robot.deployHook()
+        robot.driveByEncoder(ADVANCE_TO_LATCH_FOUNDATION)
+        robot.driveByEncoder(TOW_INTO_BUILDING_ZONE)
+        robot.unlatchHook()
+        sleep(500)
+        robot.driveByEncoder(MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE)
+
+
+
+        // after last command, continue to run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+            sleep(50)
         }
+        robot.stopAllMotors()
     }
 }

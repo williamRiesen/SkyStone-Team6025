@@ -48,7 +48,8 @@ class TurtleDozerTeleOp6025 : OpMode() {
         val yInput = gamepad1.right_stick_y.toDouble()
         val rotationInput = gamepad1.left_stick_x.toDouble()
         val driverCommand = DriveCommand(xInput, yInput, rotationInput)
-
+        val lefttriggerInput = gamepad2.left_trigger
+        val righttriggerInput = gamepad2.right_trigger
 //        val locationMatrix = robot.visualLocalizer.getLocation()
 //        if (locationMatrix != null) {
 //            val x = locationMatrix[0, 0]

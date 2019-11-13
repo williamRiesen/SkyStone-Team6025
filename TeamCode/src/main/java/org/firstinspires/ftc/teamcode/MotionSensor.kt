@@ -9,13 +9,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.*
 
 class MotionSensor(hwMap: HardwareMap) {
     lateinit var imu: BNO055IMU
+    val parameters = Parameters()
 
     init {
         // Set up the parameters with which we will use our IMU. Note that integration
         // algorithm here just reports accelerations to the logcat log; it doesn't actually
         // provide positional information.
 
-        val parameters = Parameters()
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS
         parameters.accelUnit = AccelUnit.METERS_PERSEC_PERSEC
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"
@@ -30,6 +30,10 @@ class MotionSensor(hwMap: HardwareMap) {
     fun getHeading(): Float {
         val angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS)
         return - angles.firstAngle
+    }
+
+    fun resetHeading(){
+        imu.initialize(parameters)
     }
 }
 

@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode
+
 /* Copyright (c) 2017 FIRST. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -36,16 +37,32 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.util.ElapsedTime
 import com.qualcomm.robotcore.util.Range
+import kotlin.math.PI
 
-@Autonomous(name = "Autonomous 2", group = "Holobot")
+
+
+@Autonomous(name = "Red Autonomous", group = "Holobot")
 //@Disabled
-class Autonomous2 : LinearOpMode(){
+
+
+class RedAutonomous : LinearOpMode() {
+
 
     lateinit var robot: TurtleDozer
 
     override fun runOpMode() {
 
         robot = TurtleDozer(hardwareMap)
+
+        val A_TO_B = Vector(90, 0)
+        val ROTATION_AT_B = -135
+        val B_TO_C = Vector(90, 0)
+        val ROTATION_AT_C = 135
+        val C_TO_D = Vector(0, 0)
+        val ROTATION_AT_D = 0
+        val D_TO_E = Vector(0,0)
+        val E_TO_F = Vector(0,0)
+
         telemetry.addData("Status", "Initialized")
         telemetry.update()
 
@@ -53,6 +70,17 @@ class Autonomous2 : LinearOpMode(){
         waitForStart()
 
         //Commands for autonomous robot action go here...
+
+
+        robot.driveByEncoder(A_TO_B)
+        robot.rotate(ROTATION_AT_B)
+        robot.driveByEncoder(B_TO_C)
+        robot.rotate(ROTATION_AT_C)
+        robot.driveByEncoder(C_TO_D)
+        robot.rotate(ROTATION_AT_D)
+        robot.driveByEncoder(D_TO_E)
+        robot.driveByEncoder(E_TO_F)
+
 
         // after last command, continue to run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
