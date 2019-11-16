@@ -7,14 +7,19 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
+import com.qualcomm.robotcore.util.ElapsedTime
+import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.robotcore.internal.tfod.Timer
 import kotlin.math.*
 
 const val ONE_OVER_SQRT2 = 0.70710
 const val TICKS_PER_DEGREE_OF_PIVOT = 1200 / 90
 const val TICKS_PER_CM = 100
 const val TICKS_PER_INCH = 128
+const val INCHES_PER_SECOND = 6.0
 const val CURVATURE = 50.0
 const val POWER_LIMIT = 0.5
+const val RAMP_UP_MS = 500.0
 
 val FIRE = RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE
 val STROBE_RED = RevBlinkinLedDriver.BlinkinPattern.STROBE_RED
@@ -98,6 +103,42 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
     }
 
+    fun driveByGyro(vector: Vector,telmetry: Telemetry) {
+        val x = (vector.x * TICKS_PER_INCH)
+        val y = (vector.y * TICKS_PER_INCH)
+        val speed = vector.speed
+        val rightFront = ((-x + y) * ONE_OVER_SQRT2).toInt()
+        val leftFront = ((-x - y) * ONE_OVER_SQRT2).toInt()
+        val rightRear = ((x + y) * ONE_OVER_SQRT2).toInt()
+        val leftRear = ((x - y) * ONE_OVER_SQRT2).toInt()
+        val xSpeed = speed * x / (x + y).toDouble()
+        val ySpeed = speed * y / (x + y).toDouble()
+        val desiredHeading = 0.0
+        val correctionFactor = 5.0
+        val driveCommand = DriveCommand(xSpeed, ySpeed, 0.0)
+
+        for (motor in allMotors) {
+            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        }
+
+        while (rightFrontDrive.currentPosition.absoluteValue < rightFront.absoluteValue &&
+                leftFrontDrive.currentPosition.absoluteValue < leftFront.absoluteValue &&
+                rightRearDrive.currentPosition.absoluteValue < rightRear.absoluteValue &&
+                leftRearDrive.currentPosition.absoluteValue < leftRear.absoluteValue) {
+
+            val heading = motionSensor.getHeading()
+            val correctionAngle = (heading- desiredHeading) * correctionFactor
+            telmetry.addData("Heading",heading)
+            telmetry.addData("Correction Angle", correctionAngle)
+            telmetry.update()
+            val correctedDriveCommand = driveCommand.rotated(correctionAngle)
+            setDriveMotion(correctedDriveCommand)
+        }
+
+        stopAllMotors()
+    }
+
     fun driveByEncoder(vector: Vector) {
         val x = vector.x * TICKS_PER_INCH
         val y = vector.y * TICKS_PER_INCH
@@ -105,6 +146,7 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         val leftFront = (-x - y) * ONE_OVER_SQRT2
         val rightRear = (x + y) * ONE_OVER_SQRT2
         val leftRear = (x - y) * ONE_OVER_SQRT2
+        val timer = ElapsedTime()
 
         for (motor in allMotors) {
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -116,11 +158,17 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         rightRearDrive.targetPosition = rightRear.toInt()
         leftRearDrive.targetPosition = leftRear.toInt()
 
-        for (motor in allMotors) motor.power = vector.speed
+        timer.reset()
+
+
 
         while (motorsBusy) {
-            Thread.sleep(50)
+            val momentaryPower =
+                    if (timer.milliseconds() < RAMP_UP_MS) timer.milliseconds() / RAMP_UP_MS * vector.speed
+                    else vector.speed
+            for (motor in allMotors) motor.power = momentaryPower
         }
+        for (motor in allMotors) motor.power = 0.0
     }
 
     fun rotate(degrees: Int) {

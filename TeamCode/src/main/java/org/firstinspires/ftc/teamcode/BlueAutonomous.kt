@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.hardware.DcMotor
 
 
 @Autonomous(name = "Blue Autonomous", group = "Holobot")
@@ -47,8 +48,6 @@ class BlueAutonomous : LinearOpMode() {
         robot = TurtleDozer(hardwareMap)
 
 
-
-
         telemetry.addData("Status", "Initialized")
         telemetry.update()
 
@@ -57,9 +56,9 @@ class BlueAutonomous : LinearOpMode() {
 
         //Commands for autonomous robot action go here...
 
-        val MOVE_NEXT_TO_FOUNDATION = Vector(18, -18)
-        val ADVANCE_TO_LATCH_FOUNDATION = Vector(0,-4,0.1)
-        val TOW_INTO_BUILDING_ZONE = Vector(0,18, 0.25)
+        val MOVE_NEXT_TO_FOUNDATION = Vector(25, -25)
+        val ADVANCE_TO_LATCH_FOUNDATION = Vector(6,-3,0.1)
+        val TOW_INTO_BUILDING_ZONE = Vector(0,50, 0.25)
         val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (-24,0)
 
 
@@ -67,6 +66,7 @@ class BlueAutonomous : LinearOpMode() {
         robot.deployHook()
         robot.driveByEncoder(ADVANCE_TO_LATCH_FOUNDATION)
         robot.driveByEncoder(TOW_INTO_BUILDING_ZONE)
+        robot.driveByGyro(TOW_INTO_BUILDING_ZONE,telemetry)
         robot.unlatchHook()
         sleep(500)
         robot.driveByEncoder(MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE)

@@ -76,7 +76,7 @@ class TeleOp : OpMode() {
         telemetry.update()
 
         val driveCommand = DriveCommand(xScooch, yScooch, rotation * ROTATION_SPEED_ADJUST)
-        driveCommand.rotate(heading)
+        driveCommand.rotate(heading + 3.1415f)
         robot.setDriveMotion(driveCommand)
     }
 

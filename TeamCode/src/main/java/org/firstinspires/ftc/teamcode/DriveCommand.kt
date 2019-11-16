@@ -12,5 +12,12 @@ class DriveCommand(var xSpeed: Double, var ySpeed: Double, var rotationSpeed: Do
         ySpeed = y
     }
 
+    public fun rotated(radians: Double):DriveCommand {
+
+        return DriveCommand(xSpeed * cos(radians) - ySpeed * sin(radians),
+                xSpeed * sin(radians) + ySpeed * cos(radians),
+                rotationSpeed)
+    }
+
 
 }
