@@ -29,11 +29,13 @@
 
 package org.firstinspires.ftc.teamcode
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import kotlin.math.atan2
 
 @TeleOp(name = "HolobotTeleOp", group = "Holobot")
+@Disabled
 class HoloBotTeleOp : OpMode() {
 
    // lateinit var robot: HoloBot

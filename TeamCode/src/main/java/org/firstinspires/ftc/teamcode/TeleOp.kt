@@ -36,7 +36,7 @@ import kotlin.math.PI
 import kotlin.math.atan2
 
 
-@TeleOp(name = "TeleOp", group = "TurtleDozer")
+@TeleOp(name = "TeleOp", group = "TurtleDozer.")
 class TeleOp : OpMode() {
 
     val TWO_PI = PI * 2.0
@@ -60,9 +60,11 @@ class TeleOp : OpMode() {
             robot.tailhook.position = 0.0
         }
 
-        if (gamepad2.dpad_up) {
-            robot.tailhook.position = 0.5
+        if (gamepad2.dpad_up)  {
+            robot.tailhook.position = 1.0
         }
+        robot.dozerbladeRight.position = gamepad2.left_trigger.toDouble()
+        robot.dozerbladeLeft.position= (1.0- gamepad2.left_trigger).toDouble()
 
         val rotation = gamepad1.left_stick_x.toDouble()
         val xScooch = gamepad1.right_stick_x.toDouble()
@@ -80,10 +82,11 @@ class TeleOp : OpMode() {
         robot.setDriveMotion(driveCommand)
     }
 
+
     override fun stop() {
         with(robot) {
             stopAllMotors()
-//            visualLocalizer.close()
+            visualLocalizer.close()
             motionSensor.imu.stopAccelerationIntegration()
         }
     }

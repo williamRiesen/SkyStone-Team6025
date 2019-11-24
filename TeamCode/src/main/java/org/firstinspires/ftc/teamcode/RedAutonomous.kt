@@ -54,14 +54,6 @@ class RedAutonomous : LinearOpMode() {
 
         robot = TurtleDozer(hardwareMap)
 
-        val A_TO_B = Vector(90, 0)
-        val ROTATION_AT_B = -135
-        val B_TO_C = Vector(90, 0)
-        val ROTATION_AT_C = 135
-        val C_TO_D = Vector(0, 0)
-        val ROTATION_AT_D = 0
-        val D_TO_E = Vector(0,0)
-        val E_TO_F = Vector(0,0)
 
         telemetry.addData("Status", "Initialized")
         telemetry.update()
@@ -71,15 +63,31 @@ class RedAutonomous : LinearOpMode() {
 
         //Commands for autonomous robot action go here...
 
+        val MOVE_NEXT_TO_FOUNDATION = Vector(-25, -25)
+        val ADVANCE_TO_LATCH_FOUNDATION = Vector(-6,-4,0.1)
+        val TOW_INTO_BUILDING_ZONE = Vector(0,50, 0.25)
+        val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (48,0)
 
-        robot.driveByEncoder(A_TO_B)
-        robot.rotate(ROTATION_AT_B)
-        robot.driveByEncoder(B_TO_C)
-        robot.rotate(ROTATION_AT_C)
-        robot.driveByEncoder(C_TO_D)
-        robot.rotate(ROTATION_AT_D)
-        robot.driveByEncoder(D_TO_E)
-        robot.driveByEncoder(E_TO_F)
+
+      //  robot.driveByEncoder(MOVE_NEXT_TO_FOUNDATION)
+       // robot.deployHook()
+      //  robot.driveByEncoder(ADVANCE_TO_LATCH_FOUNDATION)
+       // robot.driveByEncoder(TOW_INTO_BUILDING_ZONE)
+      //  robot.driveByGyro(TOW_INTO_BUILDING_ZONE,telemetry)
+       // robot.unlatchHook()
+      //  sleep(500)
+       // robot.driveByEncoder(MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE)
+
+        robot.driveByEncoder(MOVE_NEXT_TO_FOUNDATION)
+        robot.deployHook()
+        robot.driveByEncoder(ADVANCE_TO_LATCH_FOUNDATION)
+        robot.driveByEncoder(TOW_INTO_BUILDING_ZONE)
+        robot.driveByGyro(TOW_INTO_BUILDING_ZONE,telemetry)
+        robot.unlatchHook()
+        sleep(500)
+        robot.driveByEncoder(MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE)
+
+
 
 
         // after last command, continue to run until the end of the match (driver presses STOP)

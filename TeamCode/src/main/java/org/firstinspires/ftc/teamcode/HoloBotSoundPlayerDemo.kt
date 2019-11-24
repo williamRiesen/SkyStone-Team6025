@@ -52,7 +52,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp
  */
 
 @TeleOp(name = "SKYSTONE Sounds", group = "Concept")
-//@Disabled
+@Disabled
 
 class HoloBotSoundPlayerDemo : LinearOpMode() {
 

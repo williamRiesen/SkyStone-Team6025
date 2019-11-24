@@ -9,15 +9,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
 import com.qualcomm.robotcore.util.ElapsedTime
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.firstinspires.ftc.robotcore.internal.tfod.Timer
+import kotlin.concurrent.timer
 import kotlin.math.*
 
 const val ONE_OVER_SQRT2 = 0.70710
 const val TICKS_PER_DEGREE_OF_PIVOT = 1200 / 90
-const val TICKS_PER_CM = 100
 const val TICKS_PER_INCH = 128
-const val INCHES_PER_SECOND = 6.0
-const val CURVATURE = 50.0
 const val POWER_LIMIT = 0.5
 const val RAMP_UP_MS = 500.0
 
@@ -37,6 +34,7 @@ val RIGHT = DriveCommand(1.0, 0.0, 0.0)
 val LEFT = DriveCommand(-1.0, 0.0, 0.0)
 val CLOCKWISE = DriveCommand(0.0, 0.0, 1.0)
 val COUNTERCLOCKWISE = DriveCommand(0.0, 0.0, -1.0)
+val STOP = DriveCommand(0.0, 0.0, 0.0)
 
 class TurtleDozer(hardwareMap: HardwareMap) {
 
@@ -50,25 +48,15 @@ class TurtleDozer(hardwareMap: HardwareMap) {
     val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
 
     val tailhook = hardwareMap.get(Servo::class.java, "tailhook")
+    val dozerbladeRight = hardwareMap.get(Servo::class.java, "dozerbladeRight")
+    val dozerbladeLeft = hardwareMap.get(Servo::class.java, "dozerbladeLeft")
 
-//    val hingeJoint = try {
-//        hardwareMap.get(Servo::class.java, "hingeJoint")
-//    } catch (e: IllegalArgumentException) {
-//    }
-//
-////    val viceGrip = try {
-//        hardwareMap.get(Servo::class.java, "viceGrip")
-//    } catch (e: IllegalArgumentException) {
-////        null
-////    }
-//
-//    val allServo = listOf(hingeJoint, viceGrip)
 
 //    private val blinkyLights = hardwareMap.get(RevBlinkinLedDriver::class.java, "blinkin")
 
-//    val cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName())
+    val cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName())
 
-    // val visualLocalizer = VisualLocalizer(hardwareMap)
+    val visualLocalizer = VisualLocalizer(hardwareMap)
     val motionSensor = MotionSensor(hardwareMap)
 
     init {
@@ -78,7 +66,6 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         leftFrontDrive.targetPosition = 0
         rightRearDrive.targetPosition = 0
         leftRearDrive.targetPosition = 0
-
     }
 
 
@@ -89,12 +76,11 @@ class TurtleDozer(hardwareMap: HardwareMap) {
     fun stopAllMotors() {
         for (motor in allMotors) {
             motor.power = 0.0
-//            for (servo in allServo)
-//                servo.position = 0.0
         }
     }
 
     fun setDriveMotion(command: DriveCommand) {
+        for (motor in allMotors) motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         val xSpeedScaled = command.xSpeed * ONE_OVER_SQRT2
         val ySpeedScaled = command.ySpeed * ONE_OVER_SQRT2
         rightFrontDrive.power = -xSpeedScaled + ySpeedScaled - command.rotationSpeed
@@ -103,7 +89,7 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
     }
 
-    fun driveByGyro(vector: Vector,telmetry: Telemetry) {
+    fun driveByGyro(vector: Vector, telmetry: Telemetry) {
         val x = (vector.x * TICKS_PER_INCH)
         val y = (vector.y * TICKS_PER_INCH)
         val speed = vector.speed
@@ -114,7 +100,7 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         val xSpeed = speed * x / (x + y).toDouble()
         val ySpeed = speed * y / (x + y).toDouble()
         val desiredHeading = 0.0
-        val correctionFactor = 5.0
+        val correctionFactor = 10.0
         val driveCommand = DriveCommand(xSpeed, ySpeed, 0.0)
 
         for (motor in allMotors) {
@@ -128,8 +114,8 @@ class TurtleDozer(hardwareMap: HardwareMap) {
                 leftRearDrive.currentPosition.absoluteValue < leftRear.absoluteValue) {
 
             val heading = motionSensor.getHeading()
-            val correctionAngle = (heading- desiredHeading) * correctionFactor
-            telmetry.addData("Heading",heading)
+            val correctionAngle = (heading - desiredHeading) * correctionFactor
+            telmetry.addData("Heading", heading)
             telmetry.addData("Correction Angle", correctionAngle)
             telmetry.update()
             val correctedDriveCommand = driveCommand.rotated(correctionAngle)
@@ -159,8 +145,6 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         leftRearDrive.targetPosition = leftRear.toInt()
 
         timer.reset()
-
-
 
         while (motorsBusy) {
             val momentaryPower =
@@ -249,6 +233,48 @@ class TurtleDozer(hardwareMap: HardwareMap) {
         }
 
 
+    fun slideOver(inches: Double) {
+        driveByEncoder(Vector(inches.toInt(), 0))
+    }
+
+    fun dragWithBalance(telmetry: Telemetry) {
+
+        val timer = ElapsedTime()
+        timer.reset()
+        val targetHeading = PI.toFloat()
+        var status = "unknown"
+        while (timer.seconds() < 20) {
+            var startHeading = motionSensor.getHeading()
+            setDriveMotion(DriveCommand(0.0, 0.2, 0.0))
+            while (
+                    (motionSensor.getHeading() - startHeading).absoluteValue < PI / 90.0 ||
+                    (status == "improving" &&
+                            (motionSensor.getHeading() - targetHeading).absoluteValue < PI / 90.0)) {
+            }
+            setDriveMotion(STOP)
+
+
+            status = if (motionSensor.getHeading() in startHeading..targetHeading ||
+                    motionSensor.getHeading() in targetHeading..startHeading) {
+                "improving"
+            } else {
+                "worsening"
+            }
+
+            telmetry.addData("Status", status)
+            telmetry.addData("RunLength", rightRearDrive.currentPosition)
+            telmetry.update()
+            var increment = 2.0 * 200 / rightRearDrive.currentPosition
+            if (motionSensor.getHeading() - startHeading < 0.0) {
+                slideOver(-increment)
+            } else {
+                slideOver(increment)
+            }
+
+        }
+    }
+
+
 //    fun autoDriveTo(targetPosition: Position) {
 //        val arrivalTolerance = Position(5.0F, 5.0F, 5.0F)
 //        // Step: Determine current location and heading; if at target within tolerance, exit process.
@@ -262,19 +288,19 @@ class TurtleDozer(hardwareMap: HardwareMap) {
 //                Position(x, y, heading)
 //            } else {
 //                val heading = motionSensor.getHeading()
-//                Position(x, y, heading)
+////                Position(x, y, heading)
 //            }
-//            val course = targetPosition - currentPosition
-//        } while (course.allTermsLessThan(arrivalTolerance)
+////            val course = targetPosition - currentPosition
+////        } while (course.allTermsLessThan(arrivalTolerance)
 //
 //
-//                // Step: Calculate drivecommand that will get to destination location and heading
+//        // Step: Calculate drivecommand that will get to destination location and heading
 //
-//                subtract target position from current position
-//                // Step: Run this as a driveToPosition sequence using PID controls in DcMotor Class
+//        //subtract target position from current position
+//        // Step: Run this as a driveToPosition sequence using PID controls in DcMotor Class
 //
-//                // calculate how long it will take to reach target positionOrientation
-//                travelTime = course . calculateTravelTime ()
+//        // calculate how long it will take to reach target positionOrientation
+//        //travelTime = course . calculateTravelTime ()
 //        )
 //        // Step: On arrival, iterate: i.e. check location again
 //    }
