@@ -41,7 +41,7 @@ class TurtleDozerTeleOp6025 : OpMode() {
     lateinit var robot: TurtleDozer
 
     override fun init() {
-        robot = TurtleDozer(hardwareMap)
+        robot = TurtleDozer.build(hardwareMap)
        // robot.setLights(GREEN)
     }
 
@@ -69,7 +69,7 @@ class TurtleDozerTeleOp6025 : OpMode() {
         with(robot) {
             stopAllMotors()
 //            visualLocalizer.close()
-            motionSensor.imu.stopAccelerationIntegration()
+//            motionSensor.imu.stopAccelerationIntegration()
         }
     }
 }

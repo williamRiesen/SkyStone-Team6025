@@ -42,7 +42,7 @@ class TurtleDozerTeleOp : OpMode() {
     lateinit var robot: TurtleDozer
 
     override fun init() {
-        robot = TurtleDozer(hardwareMap)
+        robot = TurtleDozer.build(hardwareMap)
         for (motor in robot.allMotors){
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -66,7 +66,6 @@ class TurtleDozerTeleOp : OpMode() {
         with(robot) {
             stopAllMotors()
 //            visualLocalizer.close()
-            motionSensor.imu.stopAccelerationIntegration()
         }
     }
 }

@@ -32,56 +32,28 @@ package org.firstinspires.ftc.teamcode
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.util.ElapsedTime
-import com.qualcomm.robotcore.util.Range
-import kotlin.math.PI
 
+//const val mmPerInch = 25.4
 
-
-@Autonomous(name = "Red Autonomous", group = "Holobot")
+@Autonomous(name = "Visual Navigation Tester", group = "Concept")
 @Disabled
 
+class VisualNavigationTesterOpMode : LinearOpMode() {
 
-class RedAutonomous : LinearOpMode() {
-
-
-    lateinit var robot: TurtleDozer
+    lateinit var robot: VisualNavigationTesterBot
 
     override fun runOpMode() {
 
-        robot = TurtleDozer.build(hardwareMap)
+        robot = VisualNavigationTesterBot(hardwareMap)
+        robot.xPosition = 24.0
+        robot.yPosition= 60.0
 
-
-        telemetry.addData("Status", "Initialized")
-        telemetry.update()
-
-        // Wait for the game to start (driver presses PLAY)
         waitForStart()
 
-        //Commands for autonomous robot action go here...
+        robot.autoDriveTo(36.0,60.0,telemetry)
+        robot.playSound(Sound.WOOKIE)
 
-        val MOVE_NEXT_TO_FOUNDATION = Vector(-25, -25)
-        val ADVANCE_TO_LATCH_FOUNDATION = Vector(-6,-4,0.1)
-        val TOW_INTO_BUILDING_ZONE = Vector(0,50, 0.25)
-        val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (48,0)
-
-
-        robot.driveByEncoder(MOVE_NEXT_TO_FOUNDATION)
-        robot.deployHook()
-        robot.driveByEncoder(ADVANCE_TO_LATCH_FOUNDATION)
-        robot.driveByEncoder(TOW_INTO_BUILDING_ZONE)
-        robot.driveByGyro(TOW_INTO_BUILDING_ZONE,telemetry)
-        robot.unlatchHook()
-        sleep(500)
-        robot.driveByEncoder(MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE)
-
-        // after last command, continue to run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-            sleep(50)
-        }
-        robot.stopAllMotors()
+        robot.visualNavigator.targetsSkyStone.deactivate()
     }
+
 }

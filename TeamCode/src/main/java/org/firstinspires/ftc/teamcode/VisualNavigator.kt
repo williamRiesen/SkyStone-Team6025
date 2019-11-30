@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
+import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.ClassFactory
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF
@@ -75,19 +76,19 @@ import java.util.*
  */
 
 
-@TeleOp(name = "Visual Navigator", group = "Concept")
-//@Disabled
-
-
-class VisualNavigator : LinearOpMode() {
+class VisualNavigator(hardwareMap: HardwareMap) {
     // Class Members
     private var lastLocation: OpenGLMatrix? = null
-    private lateinit var vuforia: VuforiaLocalizer
+    private var vuforia: VuforiaLocalizer
+    private var allTrackables: MutableList<VuforiaTrackable>
+    var targetsSkyStone: VuforiaTrackables
     private var targetVisible = false
     private var phoneXRotate = 0f
     private var phoneYRotate = 0f
     private val phoneZRotate = 0f
-    override fun runOpMode() {
+    private val VUFORIA_KEY = "AYxwx/r/////AAAAGakdZOtDw05Xp4pXTj6pSmsy39lOmGIbddWbBni9Jm2tBR/he9LCuun5e0zE8UEFoe5hQw4o9xY8pGFaf12xuimsOOduYkXTrn9wHWZXaX0fmRRy5uuMA3lB0qqSnkqxTbfweOHljf7YcHp4VwUTZDnoyEf9hJYZVl6oD8MGPUnm5f0ywgW9MX8YFjFtd+7rnE38HooCnp/4zJR5E6cD+5BvwErfgC9G6n+QFoZosQheCZsmGGJas/rdFoY3f0L3EHJNUNV+ITyY+rxqVa8o4uNKtDrJfz2m5BLvMwEUYDsDWCH4NPE9ybj7ei4bsapfjDkWRF2YN4yr2pzFiLCcWtvdId9FBBfCoSOdfv5taGhl"
+
+    init {
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
          * We can pass Vuforia the handle to a camera preview resource (on the RC phone);
@@ -101,9 +102,9 @@ class VisualNavigator : LinearOpMode() {
         parameters.vuforiaLicenseKey = VUFORIA_KEY
         parameters.cameraDirection = CAMERA_CHOICE
         vuforia = ClassFactory.getInstance().createVuforia(parameters)
-// Load the data sets for the trackable objects. These particular data
+        // Load the data sets for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
-        val targetsSkyStone: VuforiaTrackables = vuforia.loadTrackablesFromAsset("Skystone")
+        targetsSkyStone = vuforia.loadTrackablesFromAsset("Skystone")
         val stoneTarget: VuforiaTrackable = targetsSkyStone[0]
         stoneTarget.name = "Stone Target"
         val blueRearBridge: VuforiaTrackable = targetsSkyStone[1]
@@ -132,9 +133,7 @@ class VisualNavigator : LinearOpMode() {
         rear2.name = "Rear Perimeter 2"
 
         // For convenience, gather together all the trackable objects in one easily-iterable collection */
-
-
-        val allTrackables: MutableList<VuforiaTrackable> = ArrayList()
+        allTrackables = ArrayList()
         allTrackables.addAll(targetsSkyStone)
 
         /**
@@ -237,6 +236,9 @@ class VisualNavigator : LinearOpMode() {
         if (PHONE_IS_PORTRAIT) {
             phoneXRotate = 90f
         }
+        if (PHONE_IS_JACK_SIDE_UP) {
+            phoneXRotate = 180f
+        }
 
         // Next, translate the camera lens to where it is on the robot.
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
@@ -258,6 +260,8 @@ class VisualNavigator : LinearOpMode() {
             (trackable.listener as VuforiaTrackableDefaultListener).setPhoneInformation(robotFromCamera!!, parameters.cameraDirection)
         }
 
+        targetsSkyStone.activate()
+
         // WARNING:
         // In this sample, we do not wait for PLAY to be pressed.  Target Tracking is started immediately when INIT is pressed.
         // This sequence is used to enable the new remote DS Camera Preview feature to be used with this sample.
@@ -271,51 +275,8 @@ class VisualNavigator : LinearOpMode() {
         // Tap the preview window to receive a fresh image.
 
 
-        targetsSkyStone.activate()
-        while (!isStopRequested) {
-
-            // check all the trackable targets to see which one (if any) is visible.
-            targetVisible = false
-            for (trackable in allTrackables) {
-                if ((trackable.listener as VuforiaTrackableDefaultListener).isVisible) {
-                    telemetry.addData("Visible Target", trackable.name)
-                    targetVisible = true
-// getUpdatedRobotLocation() will return null if no new information is available since
-                    // the last time that call was made, or if the trackable is not currently visible.
-                    val robotLocationTransform: OpenGLMatrix? = (trackable.listener as VuforiaTrackableDefaultListener).updatedRobotLocation
-                    if (robotLocationTransform != null) {
-                        lastLocation = robotLocationTransform
-                    }
-                    break
-                }
-            }
-
-            // Provide feedback as to where the robot is located (if we know).
-
-
-            if (targetVisible) {
-                // express position (translation) of robot in inches.
-
-                val translation: VectorF = lastLocation!!.translation
-                telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                        translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch)
-
-                // express the rotation of the robot in degrees.
-
-
-                val rotation: Orientation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES)
-                telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle)
-            } else {
-                telemetry.addData("Visible Target", "none")
-            }
-            telemetry.update()
-        }
-
-        // Disable Tracking when we are done;
-
-
-        targetsSkyStone.deactivate()
     }
+
 
     companion object {
         // IMPORTANT:  For Phone Camera, set 1) the camera source and 2) the orientation, based on how your phone is mounted:
@@ -326,6 +287,7 @@ class VisualNavigator : LinearOpMode() {
         //
         private val CAMERA_CHOICE = BACK
         private const val PHONE_IS_PORTRAIT = false
+        private const val PHONE_IS_JACK_SIDE_UP = true
         /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
      * 'parameters.vuforiaLicenseKey' is initialized is for illustration only, and will not function.
@@ -356,5 +318,34 @@ class VisualNavigator : LinearOpMode() {
         // Constants for perimeter targets
         private const val halfField = 72 * mmPerInch
         private const val quadField = 36 * mmPerInch
+    }
+
+    fun getCurrentPosition(): OpenGLMatrix? {
+        // check all the trackable targets to see which one (if any) is visible.
+        targetVisible = false
+        for (trackable in allTrackables) {
+            if ((trackable.listener as VuforiaTrackableDefaultListener).isVisible) {
+//                telemetry.addData("Visible Target", trackable.name)
+                targetVisible = true
+// getUpdatedRobotLocation() will return null if no new information is available since
+                // the last time that call was made, or if the trackable is not currently visible.
+                val robotLocationTransform: OpenGLMatrix? = (trackable.listener as VuforiaTrackableDefaultListener).updatedRobotLocation
+                if (robotLocationTransform != null) {
+                    lastLocation = robotLocationTransform
+                }
+                break
+            }
+        }
+
+        // Provide feedback as to where the robot is located (if we know).
+
+        if (targetVisible) {
+            return lastLocation
+        } else {
+            return null
+
+        }
+
+
     }
 }

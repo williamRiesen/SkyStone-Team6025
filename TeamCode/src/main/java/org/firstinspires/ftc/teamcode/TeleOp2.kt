@@ -40,22 +40,24 @@ import com.qualcomm.robotcore.hardware.Servo
 import kotlin.math.PI
 import kotlin.math.atan2
 
+
+@TeleOp(name = "TeleOp", group = "TurtleDozer.")
 @Disabled
-@TeleOp(name = "TeleOp2", group = "TurtleDozer.")
-class TeleOp : OpMode() {
+class TeleOp2 : OpMode() {
 
-    val TWO_PI = PI * 2.0
-    val ROTATION_SPEED_ADJUST = 0.25
-
-    private lateinit var robot: TurtleDozer
-    private var relativeBearing = 0.0
-    private var bearing = 0.0
-    private var rotation = 0.0
+//    val TWO_PI = PI * 2.0
+//    val ROTATION_SPEED_ADJUST = 0.25
+//
+//    private lateinit var robot: TurtleDozer2
+//    private var relativeBearing = 0.0
+//    private var bearing = 0.0
+//    private var rotation = 0.0
 
     override fun init() {
 
 
-        robot = TurtleDozer.build(hardwareMap)
+//        robot = TurtleDozer2(hardwareMap)
+//                TurtleDozer.build(hardwareMap)
 //        robot.showStatus("Initial robot build complete.")
 //        for (motor in robot.allMotors) {
 //            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -65,36 +67,37 @@ class TeleOp : OpMode() {
     }
 
     override fun loop() {
-        if (gamepad2.dpad_down) {
-            robot.tailhook.position = 0.0
-        }
-
-        if (gamepad2.dpad_up)  {
-            robot.tailhook.position = 1.0
-        }
-        robot.dozerbladeRight.position = gamepad2.left_trigger.toDouble()
-        robot.dozerbladeLeft.position= (1.0- gamepad2.left_trigger).toDouble()
-
-        val rotation = gamepad1.left_stick_x.toDouble()
-        val xScooch = gamepad1.right_stick_x.toDouble()
-        val yScooch = -gamepad1.right_stick_y.toDouble()
-        val heading = robot.motionSensor.getHeading()
-
-        telemetry.addData("Heading", heading)
-        telemetry.addData("Bearing", bearing)
-        telemetry.addData("Relative Bearing", relativeBearing)
-        telemetry.addData("Rotation", rotation)
-        telemetry.update()
-
-        val driveCommand = DriveCommand(xScooch, yScooch, rotation * ROTATION_SPEED_ADJUST)
-        driveCommand.rotate(heading + 3.1415f)
-        robot.setDriveMotion(driveCommand)
-    }
-
-
-    override fun stop() {
-        with(robot) {
-            stopAllMotors()
-        }
+//        if (gamepad2.dpad_down) {
+//            robot.tailhook.position = 0.0
+//        }
+//
+//        if (gamepad2.dpad_up)  {
+//            robot.tailhook.position = 1.0
+//        }
+//        robot.dozerbladeRight.position = gamepad2.left_trigger.toDouble()
+//        robot.dozerbladeLeft.position= (1.0- gamepad2.left_trigger).toDouble()
+//
+//        val rotation = gamepad1.left_stick_x.toDouble()
+//        val xScooch = gamepad1.right_stick_x.toDouble()
+//        val yScooch = -gamepad1.right_stick_y.toDouble()
+//        val heading = robot.motionSensor.getHeading()
+//
+//        telemetry.addData("Heading", heading)
+//        telemetry.addData("Bearing", bearing)
+//        telemetry.addData("Relative Bearing", relativeBearing)
+//        telemetry.addData("Rotation", rotation)
+//        telemetry.update()
+//
+//        val driveCommand = DriveCommand(xScooch, yScooch, rotation * ROTATION_SPEED_ADJUST)
+//        driveCommand.rotate(heading + 3.1415f)
+//        robot.setDriveMotion(driveCommand)
+//    }
+//
+//
+//    override fun stop() {
+//        with(robot) {
+//            stopAllMotors()
+//        }
+//    }
     }
 }

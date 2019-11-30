@@ -30,40 +30,31 @@ package org.firstinspires.ftc.teamcode
  */
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 
-
 @Autonomous(name = "Blue Autonomous", group = "Holobot")
-//@Disabled
-
+@Disabled
 
 class BlueAutonomous : LinearOpMode() {
 
-
     lateinit var robot: TurtleDozer
+
+    val MOVE_NEXT_TO_FOUNDATION = Vector(25, -25)
+    val ADVANCE_TO_LATCH_FOUNDATION = Vector(6,-2,0.1)
+    val TOW_INTO_BUILDING_ZONE = Vector(0,50, 0.25)
+    val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (-48,0)
 
     override fun runOpMode() {
 
-        robot = TurtleDozer(hardwareMap)
+        robot = TurtleDozer.build(hardwareMap)
 
-
-        telemetry.addData("Status", "Initialized")
-        telemetry.update()
-
-        // Wait for the game to start (driver presses PLAY)
         waitForStart()
-
-        //Commands for autonomous robot action go here...
-
-        val MOVE_NEXT_TO_FOUNDATION = Vector(25, -25)
-        val ADVANCE_TO_LATCH_FOUNDATION = Vector(6,-2,0.1)
-        val TOW_INTO_BUILDING_ZONE = Vector(0,50, 0.25)
-        val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (-48,0)
-
-
         robot.driveByEncoder(MOVE_NEXT_TO_FOUNDATION)
+        telemetry.update()
         robot.deployHook()
+        telemetry.update()
         robot.driveByEncoder(ADVANCE_TO_LATCH_FOUNDATION)
         robot.driveByEncoder(TOW_INTO_BUILDING_ZONE)
         robot.driveByGyro(TOW_INTO_BUILDING_ZONE,telemetry)
@@ -71,9 +62,6 @@ class BlueAutonomous : LinearOpMode() {
         sleep(500)
         robot.driveByEncoder(MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE)
 
-
-
-        // after last command, continue to run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             sleep(50)
         }

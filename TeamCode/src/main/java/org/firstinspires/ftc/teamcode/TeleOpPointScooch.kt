@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
@@ -39,6 +40,7 @@ const val TWO_PI = PI * 2.0
 const val ROTATION_SPEED_ADJUST = 0.25
 
 @TeleOp(name = "TeleOpPointScooch", group = "TurtleDozer")
+@Disabled
 class TeleOpPointScooch : OpMode() {
 
     private lateinit var robot: TurtleDozer
@@ -47,7 +49,7 @@ class TeleOpPointScooch : OpMode() {
     private var rotation = 0.0
 
     override fun init() {
-        robot = TurtleDozer(hardwareMap)
+        robot = TurtleDozer.build(hardwareMap)
         for (motor in robot.allMotors) {
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
@@ -106,8 +108,6 @@ class TeleOpPointScooch : OpMode() {
     override fun stop() {
         with(robot) {
             stopAllMotors()
-//            visualLocalizer.close()
-            motionSensor.imu.stopAccelerationIntegration()
         }
     }
 }
