@@ -63,10 +63,10 @@ class RedAutonomous : LinearOpMode() {
 
         //Commands for autonomous robot action go here...
 
-        val MOVE_NEXT_TO_FOUNDATION = Vector(-25, -25)
-        val ADVANCE_TO_LATCH_FOUNDATION = Vector(-6,-4,0.1)
-        val TOW_INTO_BUILDING_ZONE = Vector(0,50, 0.25)
-        val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (48,0)
+        val MOVE_NEXT_TO_FOUNDATION = Vector(-25.0, -25.0)
+        val ADVANCE_TO_LATCH_FOUNDATION = Vector(-6.0,-4.0,0.1)
+        val TOW_INTO_BUILDING_ZONE = Vector(0.0,50.0, 0.25)
+        val MOVE_TO_PARKING_ZONE_UNDER_SKYBRIDGE= Vector (48.0,0.0)
 
 
         robot.driveByEncoder(MOVE_NEXT_TO_FOUNDATION)

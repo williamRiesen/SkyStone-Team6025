@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation
+import kotlin.math.PI
 import kotlin.math.absoluteValue
 
 const val mmPerInch = 25.4
@@ -25,8 +26,70 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     var xTarget = 0.0
     var yTarget = 0.0
     var heading = 0.0
+    var yDragTarget = 0.0
 
     val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
+    var lastSavedHeading = 0.0
+    var desiredHeading = PI / 2.0
+    val driftAngleTolerance = PI / 8.0
+
+    val isCorrecting
+        get() =
+            heading in lastSavedHeading..desiredHeading || heading in desiredHeading..lastSavedHeading
+
+    private fun trialPull() {
+        lastSavedHeading = heading
+        while ((heading - lastSavedHeading).absoluteValue < driftAngleTolerance) {
+            updateSighting()
+        }
+        if (isCorrecting) {
+            // keep correcting until reaching targetheading
+        } else {
+            // stop and slide some more
+        }
+    }
+
+    private fun slideOver(inches: Double) {
+//        telemetry.addData("Status","slideOver called.")
+//        telemetry.update()
+//        Thread.sleep(1000)
+//        val slideTarget = Vector(xPosition + inches, yPosition, name = "Slide over")
+//        visuallyNavigateTo(slideTarget)
+    }
+
+    fun dragWithVisualCorrection(y: Double, telemetry: Telemetry) {
+        yDragTarget = y
+        desiredHeading = PI / 2.0
+        val increment = 4.0
+        updateSighting()
+
+        while ((yDragTarget - yPosition).absoluteValue >= arrivalTolerance) {
+            setDriveMotion(FORWARD)
+
+            val driftAngle = desiredHeading - heading
+            telemetry.addData("Heading", heading * 180 /PI)
+            telemetry.update()
+            when {
+                driftAngle in -driftAngleTolerance..driftAngleTolerance -> {
+                    val driveCommand = DriveCommand(xSpeed = 0.0, ySpeed = 0.5, rotationSpeed = 0.0)
+
+                    setDriveMotion(driveCommand)
+                }
+                driftAngle < -driftAngleTolerance -> slideOver(increment)
+                driftAngle > driftAngleTolerance -> slideOver(-increment)
+            }
+//            trialPull()
+//            if (!isCorrecting) {
+//                when {
+//                    driftAngle < -driftAngleTolerance -> slideOver(increment)
+//                    driftAngle > driftAngleTolerance -> slideOver(-increment)
+//                }
+//            }
+            updateSighting()
+        }
+        setDriveMotion(STOP)
+    }
+
 
     private val motorsBusy: Boolean
         get() {
@@ -36,7 +99,7 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
                     if (motor.isBusy) checkMotor = true
                 }
             }
-            return checkMotor
+            return false // when actual robot is available, change return from false to checkMotor
         }
 
     fun driveByEncoder(vector: Vector) {
@@ -55,20 +118,18 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
             }
         }
 
-
-
-//        if (rightFrontDrive != null) {
-//            rightFrontDrive.targetPosition = rightFront.toInt()
-//        }
-//        if (leftFrontDrive != null) {
-//            leftFrontDrive.targetPosition = leftFront.toInt()
-//        }
-//        if (rightRearDrive != null) {
-//            rightRearDrive.targetPosition = rightRear.toInt()
-//        }
-//        if (leftRearDrive != null) {
-//            leftRearDrive.targetPosition = leftRear.toInt()
-//        }
+        if (rightFrontDrive != null) {
+            rightFrontDrive.targetPosition = rightFront.toInt()
+        }
+        if (leftFrontDrive != null) {
+            leftFrontDrive.targetPosition = leftFront.toInt()
+        }
+        if (rightRearDrive != null) {
+            rightRearDrive.targetPosition = rightRear.toInt()
+        }
+        if (leftRearDrive != null) {
+            leftRearDrive.targetPosition = leftRear.toInt()
+        }
 
         timer.reset()
 
@@ -109,6 +170,9 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         if (leftRearDrive != null) {
             leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
         }
+        telemetry.addData("Heading", heading * 180 /PI)
+        telemetry.addData("setDriveMotion", command)
+        telemetry.update()
     }
 
     fun deployHook() {

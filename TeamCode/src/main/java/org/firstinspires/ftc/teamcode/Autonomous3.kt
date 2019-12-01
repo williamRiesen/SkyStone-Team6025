@@ -12,20 +12,22 @@ class Autonomous3 : LinearOpMode(){
         robot = TurtleDozer3(hardwareMap, telemetry)
         val startingXPosition = 24.0
         val startingYPosition = 60.0
-        val driveFromStartToByFoundation = Vector(36,-24)
+        val driveFromStartToByFoundation = Vector(36.0,-24.0)
         robot.xPosition = startingXPosition
         robot.yPosition = startingYPosition
+        val moveToViewNavTarget = Vector(24.0,-12.0,name = "Move to View NavTarget")
+        val alignWithFoundation = Vector(48.0,36.0,name = "Align with foundation.")
+        val backUpToLatchFoundation = Vector(48.0,24.0, name = "Back up to latch foundation.")
         robot.showStatus("Ready!")
         waitForStart()
 
-        val moveToViewNavTarget = Vector(24,-12,name = "Move to View NavTarget")
         robot.driveByEncoder(moveToViewNavTarget)
         robot.updateSighting()
-        val alignWithFoundation = Vector(48,36,name = "Align with foundation.")
-        val backUpToLatchFoundation = Vector(48,24, name = "Back up to latch foundation.")
         robot.visuallyNavigateTo(alignWithFoundation)
         robot.deployHook()
         robot.visuallyNavigateTo(backUpToLatchFoundation)
+
+        robot.dragWithVisualCorrection(60.0,telemetry)
         sleep(20000)
     }
 }

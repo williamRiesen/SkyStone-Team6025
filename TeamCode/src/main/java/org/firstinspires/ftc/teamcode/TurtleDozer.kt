@@ -278,7 +278,7 @@ class TurtleDozer(
     }
 
     private fun slideOver(inches: Double) {
-        driveByEncoder(Vector(inches.toInt(), 0))
+        driveByEncoder(Vector(inches, 0.0))
     }
 
     fun dragWithBalance(telemetry: Telemetry) {
