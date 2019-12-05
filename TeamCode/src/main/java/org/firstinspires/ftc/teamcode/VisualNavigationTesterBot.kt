@@ -36,6 +36,7 @@ class VisualNavigationTesterBot(hardwareMap: HardwareMap) {
 
     private fun updateSighting(): Boolean {
         val position = visualNavigator.getCurrentPosition()
+        val mmPerInch = 25.4
         if (position == null) return false
         else {
             val translation = position.translation

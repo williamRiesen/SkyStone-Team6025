@@ -256,31 +256,7 @@ class SimulatedIMU:BNO055IMU {
 }
 
 
-class SimulatedMotionSensor: MotionSensor {
-    val imu = SimulatedIMU()
-    val parameters = BNO055IMU.Parameters()
-    init {
-        // Set up the parameters with which we will use our IMU. Note that integration
-        // algorithm here just reports accelerations to the logcat log; it doesn't actually
-        // provide positional information.
 
-        parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"
-        parameters.loggingEnabled = true
-        parameters.loggingTag = "IMU"
-        parameters.accelerationIntegrationAlgorithm = JustLoggingAccelerationIntegrator()
-//        imu = hwMap.get(BNO055IMU::class.java, "imu")
-        imu.initialize(parameters)
-        imu.startAccelerationIntegration(Position(), Velocity(), 1000)
-    }
-    override fun getHeading(): Float {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-    override fun resetHeading() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
-}
 
 

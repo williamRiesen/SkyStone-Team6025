@@ -28,6 +28,7 @@ val STROBE_WHITE = RevBlinkinLedDriver.BlinkinPattern.STROBE_WHITE
 val YELLOW = RevBlinkinLedDriver.BlinkinPattern.YELLOW
 
 val FORWARD = DriveCommand(0.0, 1.0, 0.0)
+val SLOW_FORWARD = DriveCommand(0.25, 0.0, 0.0)
 val BACKWARD = DriveCommand(0.0, -1.0, 0.0)
 val RIGHT = DriveCommand(1.0, 0.0, 0.0)
 val LEFT = DriveCommand(-1.0, 0.0, 0.0)
@@ -73,7 +74,7 @@ class TurtleDozer(
                 val dozerbladeRight: Servo = hardwareMap.get(Servo::class.java, "dozerbladeRight")
                 val dozerbladeLeft: Servo = hardwareMap.get(Servo::class.java, "dozerbladeLeft")
 
-                val motionSensor = DefaultMotionSensor(hardwareMap)
+                val motionSensor = MotionSensor(hardwareMap)
 
                 val myApp = hardwareMap.appContext
 
@@ -103,7 +104,7 @@ class TurtleDozer(
                 val dozerbladeRight = SimulatedServo()
                 val dozerbladeLeft = SimulatedServo()
 
-                val motionSensor = SimulatedMotionSensor()
+                val motionSensor = MotionSensor(hardwareMap)
 
                 val myApp = hardwareMap.appContext
                 return TurtleDozer(

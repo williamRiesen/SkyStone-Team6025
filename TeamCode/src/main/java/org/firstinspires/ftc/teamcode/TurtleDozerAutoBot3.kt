@@ -11,23 +11,23 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation
 import kotlin.math.PI
 import kotlin.math.absoluteValue
+import kotlin.math.atan2
 
-const val mmPerInch = 25.4
-
-class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
+const val  MAX_POWER = 0.5
+class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     val visualNavigator = VisualNavigator(hardwareMap)
     val tailHook: Servo? = hardwareMap.get(Servo::class.java, "tailhook")
-    val rightFrontDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "rightFrontDrive")
-    val leftFrontDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "leftFrontDrive")
-    val rightRearDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "rightRearDrive")
-    val leftRearDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "leftRearDrive")
+    val rightFrontDrive: DcMotor = hardwareMap.get(DcMotor::class.java, "rightFrontDrive")
+    val leftFrontDrive: DcMotor = hardwareMap.get(DcMotor::class.java, "leftFrontDrive")
+    val rightRearDrive: DcMotor = hardwareMap.get(DcMotor::class.java, "rightRearDrive")
+    val leftRearDrive: DcMotor = hardwareMap.get(DcMotor::class.java, "leftRearDrive")
     var xPosition = 0.0
     var yPosition = 0.0
     var xTarget = 0.0
     var yTarget = 0.0
     var heading = 0.0
     var yDragTarget = 0.0
-
+    val mmPerInch = 25.4
     val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
     var lastSavedHeading = 0.0
     var desiredHeading = PI / 2.0
@@ -67,7 +67,7 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
             setDriveMotion(FORWARD)
 
             val driftAngle = desiredHeading - heading
-            telemetry.addData("Heading", heading * 180 /PI)
+            telemetry.addData("Heading", heading * 180 / PI)
             telemetry.update()
             when {
                 driftAngle in -driftAngleTolerance..driftAngleTolerance -> {
@@ -99,36 +99,31 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
                     if (motor.isBusy) checkMotor = true
                 }
             }
-            return false // when actual robot is available, change return from false to checkMotor
+            return checkMotor
         }
 
     fun driveByEncoder(vector: Vector) {
         val x = vector.x * TICKS_PER_INCH
         val y = vector.y * TICKS_PER_INCH
-        val rightFront = (-x + y) * ONE_OVER_SQRT2
-        val leftFront = (-x - y) * ONE_OVER_SQRT2
+
+
         val rightRear = (x + y) * ONE_OVER_SQRT2
+        val leftFront = -rightRear
         val leftRear = (x - y) * ONE_OVER_SQRT2
+        val rightFront = -leftRear
+
         val timer = ElapsedTime()
 
+        rightFrontDrive.targetPosition = rightFront.toInt()
+        leftFrontDrive.targetPosition = leftFront.toInt()
+        rightRearDrive.targetPosition = rightRear.toInt()
+        leftRearDrive.targetPosition = leftRear.toInt()
+
+
+
         for (motor in allMotors) {
-            if (motor != null) {
                 motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
                 motor.mode = DcMotor.RunMode.RUN_TO_POSITION
-            }
-        }
-
-        if (rightFrontDrive != null) {
-            rightFrontDrive.targetPosition = rightFront.toInt()
-        }
-        if (leftFrontDrive != null) {
-            leftFrontDrive.targetPosition = leftFront.toInt()
-        }
-        if (rightRearDrive != null) {
-            rightRearDrive.targetPosition = rightRear.toInt()
-        }
-        if (leftRearDrive != null) {
-            leftRearDrive.targetPosition = leftRear.toInt()
         }
 
         timer.reset()
@@ -140,37 +135,31 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         telemetry.update()
 
         while (motorsBusy) {
-            val momentaryPower =
-                    if (timer.milliseconds() < RAMP_UP_MS) timer.milliseconds() / RAMP_UP_MS * vector.speed
-                    else vector.speed
-            for (motor in allMotors) if (motor != null) {
-                motor.power = momentaryPower
-            }
+
+            rightFrontDrive.power = MAX_POWER * rightFront / (rightFront + leftFront)
+            leftFrontDrive.power = MAX_POWER * leftFront / (rightFront + leftFront)
+            rightRearDrive.power = MAX_POWER * leftFront / (rightFront + leftFront)
+            leftRearDrive.power = MAX_POWER * rightFront / (rightFront + leftFront)
+
         }
-        for (motor in allMotors) if (motor != null) {
+        for (motor in allMotors)  {
             motor.power = 0.0
         }
     }
 
     fun setDriveMotion(command: DriveCommand) {
-        for (motor in allMotors) if (motor != null) {
+        for (motor in allMotors) {
             motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
         val xSpeedScaled = command.xSpeed * ONE_OVER_SQRT2
         val ySpeedScaled = command.ySpeed * ONE_OVER_SQRT2
-        if (rightFrontDrive != null) {
+
             rightFrontDrive.power = -xSpeedScaled + ySpeedScaled - command.rotationSpeed
-        }
-        if (leftFrontDrive != null) {
             leftFrontDrive.power = -xSpeedScaled - ySpeedScaled - command.rotationSpeed
-        }
-        if (rightRearDrive != null) {
             rightRearDrive.power = xSpeedScaled + ySpeedScaled - command.rotationSpeed
-        }
-        if (leftRearDrive != null) {
             leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
-        }
-        telemetry.addData("Heading", heading * 180 /PI)
+
+        telemetry.addData("Heading", heading * 180 / PI)
         telemetry.addData("setDriveMotion", command)
         telemetry.update()
     }
@@ -209,18 +198,21 @@ class TurtleDozer3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     }
 
     fun visuallyNavigateTo(vector: Vector) {
-        xTarget = vector.x.toDouble()
-        yTarget = vector.y.toDouble()
+        xTarget = vector.x
+        yTarget = vector.y
         updateSighting()
 
         while (!atTarget) {
-            val driveCommand = DriveCommand(xTarget - xPosition, yTarget - yPosition, 0.0)
-            telemetry.addData("Step", vector.name)
-            telemetry.addData("Drive command", driveCommand)
+            val bearing = atan2(yTarget - yPosition,xTarget - xPosition)
+            val driveCommand = SLOW_FORWARD.rotated(bearing)
+            telemetry.addData("xPosition", xPosition)
+            telemetry.addData("yPosition", yPosition)
+            telemetry.addData("bearing", bearing * 180 / PI)
             telemetry.update()
+            setDriveMotion(driveCommand)
             updateSighting()
         }
-        showStatus("Arrived.")
+        setDriveMotion(STOP)
     }
 
 

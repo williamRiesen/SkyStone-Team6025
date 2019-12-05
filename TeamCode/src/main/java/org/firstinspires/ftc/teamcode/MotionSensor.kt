@@ -7,13 +7,8 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.*
 
-interface MotionSensor {
-    fun getHeading(): Float
 
-    fun resetHeading()
-}
-
-class DefaultMotionSensor(hwMap: HardwareMap) : MotionSensor {
+class MotionSensor(hwMap: HardwareMap)  {
     var imu: BNO055IMU
     val parameters = Parameters()
 
@@ -33,12 +28,12 @@ class DefaultMotionSensor(hwMap: HardwareMap) : MotionSensor {
         imu.startAccelerationIntegration(Position(), Velocity(), 1000)
     }
 
-    override fun getHeading(): Float {
+    fun getHeading(): Float {
         val angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS)
         return - angles.firstAngle
     }
 
-    override fun resetHeading(){
+    fun resetHeading(){
         imu.initialize(parameters)
     }
 }
