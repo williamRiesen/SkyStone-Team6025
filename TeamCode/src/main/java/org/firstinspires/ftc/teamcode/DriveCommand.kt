@@ -19,6 +19,6 @@ class DriveCommand(var xSpeed: Double, var ySpeed: Double, var rotationSpeed: Do
                 rotationSpeed)
     }
 
-    override fun toString()= "Go north by ${xSpeed.roundToInt()}; Go west by ${ySpeed.roundToInt()})"
+    override fun toString()= "Go north by $xSpeed); Go west by $ySpeed"
 
 }

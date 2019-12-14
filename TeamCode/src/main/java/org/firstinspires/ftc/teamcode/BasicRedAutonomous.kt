@@ -7,10 +7,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.hardware.DcMotor
 
-@Autonomous(name = "Red Autonomous", group = "Holobot")
+@Autonomous(name = "Basic Red Autonomous", group = "Holobot")
 //@Disabled
 
-class RedAutonomous : LinearOpMode() {
+class BasicRedAutonomous : LinearOpMode() {
 
     override fun runOpMode() {
 
@@ -27,6 +27,7 @@ class RedAutonomous : LinearOpMode() {
 
         waitForStart()
 
-        go(telemetry)
+        val moveOver = Vector(-12.0, 0.0,0.5,"Slide Over")
+        robot.driveByEncoder(moveOver)
     }
 }

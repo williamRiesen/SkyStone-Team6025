@@ -37,32 +37,32 @@ import kotlin.math.PI
 import kotlin.math.atan2
 
 const val TWO_PI = PI * 2.0
-const val ROTATION_SPEED_ADJUST = 0.25
+const val ROTATION_SPEED_ADJUST = 0.5
 
 @TeleOp(name = "TeleOpPointScooch", group = "TurtleDozer")
 @Disabled
 class TeleOpPointScooch : OpMode() {
 
-    private lateinit var robot: TurtleDozer
+    private lateinit var robot: TurtleDozerTeleBot
     private var relativeBearing = 0.0
     private var bearing = 0.0
     private var rotation = 0.0
 
     override fun init() {
-        robot = TurtleDozer.build(hardwareMap)
+        robot = TurtleDozerTeleBot(hardwareMap,telemetry)
         for (motor in robot.allMotors) {
-            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            motor!!.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
     }
 
     override fun loop() {
         if (gamepad2.dpad_down) {
-            robot.tailhook.position = 0.0
+            robot.tailHook!!.position = 0.0
         }
 
         if (gamepad2.dpad_up) {
-            robot.tailhook.position = 0.5
+            robot.tailHook!!.position = 0.5
         }
 
 
@@ -70,7 +70,7 @@ class TeleOpPointScooch : OpMode() {
         var yStick = -gamepad1.right_stick_y.toDouble()
         val xScooch = gamepad1.left_stick_x.toDouble()
         val yScooch = -gamepad1.left_stick_y.toDouble()
-        val heading = robot.motionSensor.getHeading()
+        val heading = robot.inertialMotionUnit.getHeading()
 
 
         if (xStick == 0.0 && yStick == 0.0) {
@@ -106,8 +106,7 @@ class TeleOpPointScooch : OpMode() {
     private fun calculateRelativeBearing(bearing: Double, heading: Double) = modulo((bearing - heading), TWO_PI)
 
     override fun stop() {
-        with(robot) {
-            stopAllMotors()
-        }
+        robot.stopAllMotors()
+
     }
 }

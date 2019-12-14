@@ -5,18 +5,18 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 
-@Autonomous(name = "Blue Autonomous", group = "Holobot")
+@Autonomous(name = "Basic Blue Autonomous", group = "Holobot")
 //@Disabled
 
-class BlueAutonomous : LinearOpMode() {
+class BasicBlueAutonomous : LinearOpMode() {
 
     override fun runOpMode() {
 
         initialize(hardwareMap,telemetry, RevBlinkinLedDriver.BlinkinPattern.BLUE)
 
         waitForStart()
-
-        go(telemetry)
+        val moveOver = Vector(12.0, 0.0,0.5,"Slide Over")
+        robot.driveByEncoder(moveOver)
     }
 
 

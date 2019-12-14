@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.hardware.bosch.BNO055IMU
 import com.qualcomm.hardware.bosch.BNO055IMU.Parameters
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver
+import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
@@ -9,10 +11,12 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import kotlin.math.PI
 
 
-class TurtleDozerTeleBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
-    private val tailHook: Servo? = hardwareMap.get(Servo::class.java, "tailhook")
+class TurtleDozerTeleBot(hardwareMap: HardwareMap, val telemetry: Telemetry) {
+    val tailHook: Servo? = hardwareMap.get(Servo::class.java, "tailhook")
+    val blinkyLights: RevBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver::class.java, "blinkyLights")
     private val dozerBladeRight: Servo? = hardwareMap.get(Servo::class.java, "dozerbladeRight")
     private val dozerBladeLeft: Servo? = hardwareMap.get(Servo::class.java, "dozerbladeLeft")
+    val kenneth: CRServo = hardwareMap.get(CRServo::class.java, "kenneth")
     private val rightFrontDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "rightFrontDrive")
     private val leftFrontDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "leftFrontDrive")
     private val rightRearDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "rightRearDrive")
@@ -32,7 +36,7 @@ val inertialMotionUnit: InertialMotionUnit = InertialMotionUnit(hardwareMap)
 //        }
     }
     var heading = 0.0
-    private val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
+    val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
 
 
     fun setDriveMotion(command: DriveCommand) {
@@ -75,6 +79,11 @@ val inertialMotionUnit: InertialMotionUnit = InertialMotionUnit(hardwareMap)
     fun showStatus(string: String) {
         telemetry.addData("Status", string)
         telemetry.update()
+    }
+    fun stopAllMotors() {
+        for (motor in allMotors) {
+            motor!!.power = 0.0
+        }
     }
 
     var dozerBladePosition: Double

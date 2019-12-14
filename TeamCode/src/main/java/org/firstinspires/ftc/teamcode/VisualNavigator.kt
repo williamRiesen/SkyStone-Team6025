@@ -244,11 +244,11 @@ class VisualNavigator(hardwareMap: HardwareMap) {
         // In this example, it is centered (left to right), but forward of the middle of the robot, and above ground level.
 
 
-        val CAMERA_FORWARD_DISPLACEMENT = 4.0f * mmPerInch   // eg: Camera is 4 Inches in front of robot center
+        val CAMERA_FORWARD_DISPLACEMENT = 6.0f * mmPerInch   // eg: Camera is 6 Inches in front of robot center
 
-        val CAMERA_VERTICAL_DISPLACEMENT = 8.0f * mmPerInch   // eg: Camera is 8 Inches above ground
+        val CAMERA_VERTICAL_DISPLACEMENT = 5.5f * mmPerInch   // eg: Camera is 5.5 Inches above ground
 
-        val CAMERA_LEFT_DISPLACEMENT = 0f     // eg: Camera is ON the robot's center line
+        val CAMERA_LEFT_DISPLACEMENT = -2.5f     // eg: Camera is 2.5 inches to right of the robot's center line
 
         val robotFromCamera: OpenGLMatrix? = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
