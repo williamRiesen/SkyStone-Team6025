@@ -73,18 +73,20 @@ class TeleOp : OpMode() {
 
         val joyStickInput = -gamepad2.right_stick_y.toDouble()
         robot.dozerBladePosition = when (joyStickInput) {
+
             0.0 -> dozerBladeNeutralPosition
             in -1.0..0.0 -> dozerBladeNeutralPosition + joyStickInput * (dozerBladeNeutralPosition - dozerBladeLowerLimit)
             in 0.0..1.0 -> dozerBladeNeutralPosition + joyStickInput * (dozerBladeUpperLimit - dozerBladeNeutralPosition)
             else -> dozerBladeNeutralPosition
+
         }
         if (gamepad2.left_bumper){
-            robot.kenneth.power = 0.5
+            robot.kenneth.power = 1.0
 
         }
 
         if (gamepad2.right_bumper){
-            robot.kenneth.power = -0.5
+            robot.kenneth.power = -1.0
         }
 
 

@@ -4,7 +4,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class Vector(var x: Double, var y: Double,val speed: Double = 0.5, val name: String = "Unnamed Vector") {
+class Vector(var x: Double, var y: Double,val speed: Double = 0.75, val name: String = "Unnamed Vector") {
 
 
     override fun toString(): String {

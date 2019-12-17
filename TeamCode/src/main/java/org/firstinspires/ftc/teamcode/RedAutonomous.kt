@@ -14,7 +14,7 @@ class RedAutonomous : LinearOpMode() {
 
     override fun runOpMode() {
 
-        moveToViewNavTarget = Vector(-24.0, -12.0, name = "Move to View NavTarget")
+//        moveToViewNavTarget = Vector(-24.0, -12.0, name = "Move to View NavTarget")
         alignWithFoundation.reflectOverXAxis()
         backUpToLatchFoundation.reflectOverXAxis()
         slideLeftToGoAroundFoundation.reflectOverXAxis()
