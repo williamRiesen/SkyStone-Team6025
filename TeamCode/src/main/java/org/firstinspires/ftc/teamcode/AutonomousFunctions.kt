@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode
 
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import kotlin.math.PI
 
@@ -9,7 +10,7 @@ import kotlin.math.PI
 lateinit var robot: TurtleDozerAutoBot3
 val startLocation = useTileGrid(0.0, 0.0)
 var startHeading = PI / 2
-var moveToViewNavTarget = useTileGrid(0.0,1.0)
+var moveToViewNavTarget = useTileGrid(0.0,2.0,0.5)
 val alignWithFoundation = useTileGrid(1.75,2.00)
 val backUpToLatchFoundation = useTileGrid(1.25,1.5,0.3)
 //1.75 - 1.25
@@ -29,6 +30,7 @@ fun initialize(hardwareMap: HardwareMap, telemetry: Telemetry, lightPattern: Rev
     robot.heading = robot.inertialMotionUnit.getHeading() + startHeading
     robot.blinkyLights.setPattern(lightPattern)
     robot.showStatus("Ready!")
+    robot.kennethClawLeft.direction = Servo.Direction.REVERSE
 }
 
 fun useTileGrid(xTile: Double, yTile: Double, speed: Double = 0.75): Vector {

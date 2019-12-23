@@ -21,4 +21,6 @@ class DriveCommand(var xSpeed: Double, var ySpeed: Double, var rotationSpeed: Do
 
     override fun toString()= "Go north by $xSpeed); Go west by $ySpeed"
 
+    val length
+        get() = sqrt(xSpeed * xSpeed + ySpeed * ySpeed)
 }

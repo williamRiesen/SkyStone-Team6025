@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode
 
-import com.qualcomm.hardware.bosch.BNO055IMU
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver
+import com.qualcomm.robotcore.hardware.CRServo
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.Servo
@@ -16,12 +16,14 @@ import kotlin.math.absoluteValue
 import kotlin.math.atan2
 
 const val MAX_POWER = 0.75
+val UNIT = DriveCommand(0.0, 1.0, 0.0)
 val SLOW_FORWARD = DriveCommand(0.0, 0.75, 0.0)
 val FORWARD = DriveCommand(0.0, 0.5, 0.0)
 val STOP = DriveCommand(0.0, 0.0, 0.0)
 const val arrivalTolerance = 2.0
 const val TICKS_PER_INCH = 128
 const val ONE_OVER_SQRT2 = 0.70710678118
+const val INCHES_PER_SEC_PER_POWER_UNIT = 22.0
 
 class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     private val visualNavigator = VisualNavigator(hardwareMap)
@@ -32,11 +34,12 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     private val leftFrontDrive: DcMotor = hardwareMap.get(DcMotor::class.java, "leftFrontDrive")
     private val rightRearDrive: DcMotor = hardwareMap.get(DcMotor::class.java, "rightRearDrive")
     private val leftRearDrive: DcMotor = hardwareMap.get(DcMotor::class.java, "leftRearDrive")
-    private val dozerBladeRight: Servo? = hardwareMap.get(Servo::class.java, "dozerbladeRight")
-    private val dozerBladeLeft: Servo? = hardwareMap.get(Servo::class.java, "dozerbladeLeft")
+    private val kennethClawRight: Servo = hardwareMap.get(Servo::class.java, "kennethClawRight")
+    val kennethClawLeft: Servo = hardwareMap.get(Servo::class.java, "kennethClawLeft")
+    private val kennethElevator: CRServo = hardwareMap.get(CRServo::class.java, "kennethElevator")
     val blinkyLights: RevBlinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver::class.java, "blinkyLights")
-    var xPosition = 0.0
-    var yPosition = 0.0
+    var xPosition = startLocation.x
+    var yPosition = startLocation.y
     var xTarget = 0.0
     var yTarget = 0.0
     var heading = 0.0
@@ -47,6 +50,8 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     private val driftAngleTolerance = PI / 18.0
     private val slideIncrement = 2.0
     private val slightSlideIncrement = 1.0
+    private val timer = ElapsedTime()
+    var driveCommand = DriveCommand(0.0,0.0,0.0)
 
     private fun slideOver(inches: Double) {
         blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE)
@@ -193,16 +198,17 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     }
 
     private fun setDriveMotion(command: DriveCommand) {
+        driveCommand = command
         for (motor in allMotors) {
             motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
-        val xSpeedScaled = command.xSpeed * ONE_OVER_SQRT2
-        val ySpeedScaled = command.ySpeed * ONE_OVER_SQRT2
+        val xSpeedScaled = driveCommand.xSpeed * ONE_OVER_SQRT2
+        val ySpeedScaled = driveCommand.ySpeed * ONE_OVER_SQRT2
 
-        rightFrontDrive.power = -xSpeedScaled + ySpeedScaled - command.rotationSpeed
-        leftFrontDrive.power = -xSpeedScaled - ySpeedScaled - command.rotationSpeed
-        rightRearDrive.power = xSpeedScaled + ySpeedScaled - command.rotationSpeed
-        leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
+        rightFrontDrive.power = -xSpeedScaled + ySpeedScaled - driveCommand.rotationSpeed
+        leftFrontDrive.power = -xSpeedScaled - ySpeedScaled - driveCommand.rotationSpeed
+        rightRearDrive.power = xSpeedScaled + ySpeedScaled - driveCommand.rotationSpeed
+        leftRearDrive.power = xSpeedScaled - ySpeedScaled - driveCommand.rotationSpeed
 
     }
 
@@ -245,25 +251,14 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
 
 
     private fun updateReckoning() {
-
-        val rightFrontTravel = rightFrontDrive.currentPosition - rightFrontLastPosition
-        val leftFrontTravel = leftFrontDrive.currentPosition - leftFrontLastPosition
-        val rightRearTravel = rightRearDrive.currentPosition - rightRearLastPosition
-        val leftRearTravel = leftRearDrive.currentPosition - leftRearLastPosition
-
-        val northWestTravel = lesserOf(rightFrontTravel, leftRearTravel)
-        val northEastTravel = lesserOf(leftFrontTravel, rightRearTravel)
-        val reckonedTravel = Vector(northEastTravel, northWestTravel).rotated(-PI / 4.0)
-
-
-        xPosition -=  2.0 * reckonedTravel.x / TICKS_PER_INCH
-        yPosition += 2.0 * reckonedTravel.y / TICKS_PER_INCH
+        val elapsedTime = timer.seconds() - timeOfLastPositionPlot
+        val travelVector = Vector(driveCommand.length,0.0).rotated(heading)
+        val xTravel = travelVector.x * elapsedTime * INCHES_PER_SEC_PER_POWER_UNIT
+        val yTravel = travelVector.y * elapsedTime * INCHES_PER_SEC_PER_POWER_UNIT
+        xPosition += xTravel
+        yPosition += yTravel
+        timeOfLastPositionPlot = timer.seconds()
         heading = inertialMotionUnit.getHeading().toDouble() + startHeading
-
-        rightFrontLastPosition = rightFrontDrive.currentPosition
-        leftFrontLastPosition = leftFrontDrive.currentPosition
-        rightRearLastPosition = rightRearDrive.currentPosition
-        leftRearLastPosition = leftRearDrive.currentPosition
     }
 
     private fun lesserOf(first: Int, second: Int): Double {
@@ -276,6 +271,7 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     private var leftFrontLastPosition = 0
     private var rightRearLastPosition = 0
     private var leftRearLastPosition = 0
+    private var timeOfLastPositionPlot = 0.0
 
     fun updateSighting(): Boolean {
         val position = visualNavigator.getCurrentPosition()
@@ -299,19 +295,19 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
             motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
             motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
         }
-        rightFrontLastPosition = 0
-        leftFrontLastPosition = 0
-        rightRearLastPosition = 0
-        leftRearLastPosition = 0
-
         updateLocation()
         while (!atTarget) {
+            val desiredHeading = PI / 2.0
+            val rotation = heading - desiredHeading
             val bearing = atan2(yTarget - yPosition, xTarget - xPosition)
-            val driveCommand = SLOW_FORWARD.rotated(-heading).rotated(bearing)
+            val driveCommand =
+                    DriveCommand(0.0, vector.speed, -rotation).rotated(-heading).rotated(bearing)//.rotated(PI / 2.0)
             setDriveMotion(driveCommand)
             updateLocation()
             telemetry.addData("x", xPosition)
             telemetry.addData("y", yPosition)
+//            telemetry.addData("Heading",heading)
+            telemetry.addData("Bearing",bearing)
             telemetry.update()
         }
         setDriveMotion(STOP)
@@ -324,16 +320,6 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         }
     }
 
-    var dozerBladePosition: Double
-        get() = dozerBladeRight?.position ?: 0.0
-        set(value) {
-            if (dozerBladeRight != null) {
-                dozerBladeRight.position = value
-            }
-            if (dozerBladeLeft != null) {
-                dozerBladeLeft.position = 1.0 - value
-            }
-        }
 
     private val atTarget
         get() =
