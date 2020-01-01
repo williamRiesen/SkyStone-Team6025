@@ -13,7 +13,17 @@ class TeleOp : OpMode() {
     private val dozerBladeLowerLimit = 0.125
     private val dozerBladeUpperLimit = 0.6
     private val timer = ElapsedTime()
+    private var timeStamp = timer.milliseconds()
     private var allianceIsBlue = false
+    private var elevatorPosition = 0.0
+    private var elevatorSpeed = 0.0
+    private var elevatorIsCalibrated = false
+    private var elevatorIsAtTopLimit = false
+    private val elevatorTopLimit = 8800.0
+    val clawReductionFactor = 0.5
+
+    private val waggleInPosition = clawRestPosition
+    private val waggleOutPosition = clawRestPosition + 0.4
 
     override fun init() {
         robot = TurtleDozerTeleBot(hardwareMap, telemetry)
@@ -41,7 +51,46 @@ class TeleOp : OpMode() {
         }
     }
 
+    private fun updateElevatorPosition() {
+        val timePassed = timer.milliseconds() - timeStamp
+        timeStamp = timer.milliseconds()
+        val distanceTravelled = timePassed * elevatorSpeed
+        elevatorPosition += distanceTravelled
+        elevatorIsAtTopLimit = elevatorPosition > elevatorTopLimit
+    }
+
+    private fun waggleRight() {
+        robot.kennethClawRight.position = waggleOutPosition
+        robot.kennethClawLeft.position = waggleInPosition
+    }
+
+    private fun waggleLeft() {
+        robot.kennethClawRight.position = waggleInPosition
+        robot.kennethClawLeft.position = waggleOutPosition
+    }
+
     override fun loop() {
+
+        updateElevatorPosition()
+        val gamepadInput = -gamepad2.left_stick_y.toDouble()
+        if (robot.elevatorIsAtBottomLimit) {
+            robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE)
+            elevatorPosition = 0.0
+            elevatorIsCalibrated = true
+            elevatorSpeed = gamepadInput.coerceAtLeast(0.0)
+        } else if (!elevatorIsCalibrated) {
+            elevatorSpeed = gamepadInput.coerceAtMost(0.0)
+            robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.YELLOW)
+        } else if (elevatorIsAtTopLimit) {
+            elevatorSpeed = gamepadInput.coerceAtMost(0.0)
+            robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE)
+        } else {
+            robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN)
+            elevatorSpeed = gamepadInput
+        }
+        robot.kennethElevator.power = elevatorSpeed
+        telemetry.addData("Elevator position", elevatorPosition)
+        telemetry.addData("Elevator is calibrated", elevatorIsCalibrated)
 
         if (gamepad2.dpad_down) {
             robot.deployHook()
@@ -71,27 +120,19 @@ class TeleOp : OpMode() {
             else robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.HEARTBEAT_RED)
         }
 
-//        val joyStickInput = -gamepad2.right_stick_y.toDouble()
-//        robot.dozerBladePosition = when (joyStickInput) {
-//
-//            0.0 -> dozerBladeNeutralPosition
-//            in -1.0..0.0 -> dozerBladeNeutralPosition + joyStickInput * (dozerBladeNeutralPosition - dozerBladeLowerLimit)
-//            in 0.0..1.0 -> dozerBladeNeutralPosition + joyStickInput * (dozerBladeUpperLimit - dozerBladeNeutralPosition)
-//            else -> dozerBladeNeutralPosition
-//
-//        }
-        robot.kennethElevator.power = gamepad2.left_stick_y.toDouble()
-
-        val clawReductionFactor = 0.5
-        val clawRestPosition = 0.35
-        val clawPosition = clawRestPosition + gamepad2.right_trigger.toDouble() * clawReductionFactor
-        robot.kennethClawRight.position = clawPosition
-        robot.kennethClawLeft.position = clawPosition
+        if (gamepad2.right_bumper) {
+            waggleRight()
+            robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.VIOLET)
+        } else if (gamepad2.left_bumper) {
+            waggleLeft()
+        } else {
+            val clawPosition = clawRestPosition + gamepad2.right_trigger.toDouble() * clawReductionFactor
+            robot.kennethClawRight.position = clawPosition
+            robot.kennethClawLeft.position = clawPosition
+        }
 
 
 
-
-        telemetry.addData("Joystick", gamepad2.right_trigger)
         telemetry.update()
 
         val rotation = gamepad1.left_stick_x.toDouble()

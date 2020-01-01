@@ -3,12 +3,8 @@ package org.firstinspires.ftc.teamcode
 import com.qualcomm.hardware.bosch.BNO055IMU
 import com.qualcomm.hardware.bosch.BNO055IMU.Parameters
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver
-import com.qualcomm.robotcore.hardware.CRServo
-import com.qualcomm.robotcore.hardware.DcMotor
-import com.qualcomm.robotcore.hardware.HardwareMap
-import com.qualcomm.robotcore.hardware.Servo
+import com.qualcomm.robotcore.hardware.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
-import kotlin.math.PI
 
 
 class TurtleDozerTeleBot(hardwareMap: HardwareMap, val telemetry: Telemetry) {
@@ -22,6 +18,9 @@ class TurtleDozerTeleBot(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     private val leftFrontDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "leftFrontDrive")
     private val rightRearDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "rightRearDrive")
     private val leftRearDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "leftRearDrive")
+    val elevatorLowerLimitSwitch: DigitalChannel = hardwareMap.get<com.qualcomm.robotcore.hardware.DigitalChannel
+            >(com.qualcomm.robotcore.hardware.DigitalChannel::class.java,  "sensor_digital")
+
     val inertialMotionUnit: InertialMotionUnit = InertialMotionUnit(hardwareMap)
     var parameters: Parameters = BNO055IMU.Parameters()
 
@@ -33,10 +32,15 @@ class TurtleDozerTeleBot(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         parameters.loggingTag = "IMU"
         parameters.accelerationIntegrationAlgorithm = com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator()
         kennethClawLeft.direction = Servo.Direction.REVERSE
+        kennethElevator.direction = DcMotorSimple.Direction.REVERSE
+        elevatorLowerLimitSwitch.setMode(com.qualcomm.robotcore.hardware.DigitalChannel.Mode.INPUT)
     }
 
     var heading = 0.0
     val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
+
+    val elevatorIsAtBottomLimit
+            get() = !elevatorLowerLimitSwitch.state
 
 
     fun setDriveMotion(command: DriveCommand) {

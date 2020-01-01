@@ -4,7 +4,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class Vector(var x: Double, var y: Double,val speed: Double = 0.75, val name: String = "Unnamed Vector") {
+class AutonomousStep(var x: Double, var y: Double, val speed: Double = 0.75, val name: String = "Unnamed AutonomousStep") {
 
 
     override fun toString(): String {
@@ -21,9 +21,9 @@ class Vector(var x: Double, var y: Double,val speed: Double = 0.75, val name: St
         x = xRotated
         y = yRotated
     }
-    fun rotated(radians: Double): Vector {
+    fun rotated(radians: Double): AutonomousStep {
 
-        return Vector(
+        return AutonomousStep(
                 x * cos(radians) - y * sin(radians),
                 x * sin(radians) + y * cos(radians),
                 speed,

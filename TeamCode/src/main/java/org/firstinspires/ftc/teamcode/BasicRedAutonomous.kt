@@ -5,16 +5,15 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
-import com.qualcomm.robotcore.hardware.DcMotor
 
 @Autonomous(name = "Basic Red Autonomous", group = "Holobot")
-//@Disabled
+@Disabled
 
 class BasicRedAutonomous : LinearOpMode() {
 
     override fun runOpMode() {
 
-//        moveToViewNavTarget = Vector(-24.0, -12.0, name = "Move to View NavTarget")
+//        moveToViewNavTarget = AutonomousStep(-24.0, -12.0, name = "Move to View NavTarget")
         alignWithFoundation.reflectOverXAxis()
         backUpToLatchFoundation.reflectOverXAxis()
         slideLeftToGoAroundFoundation.reflectOverXAxis()
@@ -27,7 +26,7 @@ class BasicRedAutonomous : LinearOpMode() {
 
         waitForStart()
 
-        val moveOver = Vector(-12.0, 0.0,0.5,"Slide Over")
+        val moveOver = AutonomousStep(-12.0, 0.0,0.5,"Slide Over")
         robot.driveByEncoder(moveOver)
     }
 }

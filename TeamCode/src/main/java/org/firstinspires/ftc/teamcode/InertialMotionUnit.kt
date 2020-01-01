@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference
+import kotlin.math.absoluteValue
 
 class InertialMotionUnit(hardwareMap: HardwareMap) {
 
@@ -32,4 +33,7 @@ class InertialMotionUnit(hardwareMap: HardwareMap) {
         val angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS)
         return -angles.firstAngle
     }
+
+    fun getAcceleration()
+            = imu.linearAcceleration.xAccel.absoluteValue + imu.linearAcceleration.yAccel.absoluteValue
 }

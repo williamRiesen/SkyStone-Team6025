@@ -10,51 +10,63 @@ import kotlin.math.PI
 lateinit var robot: TurtleDozerAutoBot3
 val startLocation = useTileGrid(0.0, 0.0)
 var startHeading = PI / 2
-var moveToViewNavTarget = useTileGrid(0.0,2.0,0.5)
-val alignWithFoundation = useTileGrid(1.75,2.00)
-val backUpToLatchFoundation = useTileGrid(1.25,1.5,0.3)
-//1.75 - 1.25
-val dragFoundation = useTileGrid(1.75,3.0)
-val slideLeftToGoAroundFoundation = useTileGrid(1.0,2.5)
-val backUpAlongsideFoundation = useTileGrid(1.0,2.0)
-val pushFoundationToRight = useTileGrid(1.5,2.0)
-val parkUnderBridge = Vector(0.0, 2.0)
+//var moveToViewNavTarget = useTileGrid(0.5, -1.0)
+val alignWithFoundation = useTileGrid(0.5, -1.0)
+val bumpAudienceWall = useTileGrid(2.0,0.0)
+val reboundToAlignWithFoundation = AutonomousStep(-16.0,0.0,0.5)
+val backUpToLatchFoundation = useTileGrid(0.0, -0.35, 0.1)
+val pullForwardToLatch = useTileGrid(0.0, 0.35, 0.1)
+val dragFoundation = useTileGrid(0.0, 1.5, 0.3)
+val slideLeftToGoAroundFoundation = useTileGrid(1.0, 2.5)
+val shiftTowardAudience = useTileGrid(-1.25, 0.0)
+val backUpToGoAroundFoundation = useTileGrid(0.0, -1.75)
+val advanceAwayFromAudience = useTileGrid(0.0, 1.25)
+val pushFoundationHome = useTileGrid(-2.0,0.0,0.5)
+val backUpAlongsideFoundation = useTileGrid(1.0, 2.0)
+val pushFoundationToRight = useTileGrid(1.5, 2.0)
+val parkUnderBridge = useTileGrid(0.0,-2.0)
+val goForwardOneTile = useTileGrid(1.0, 0.0, 0.5, "Go Forward One Tile.")
 var foundationGoalLine = 60.0
+val pointA = useTileGrid(1.5, 2.6)
 
 fun initialize(hardwareMap: HardwareMap, telemetry: Telemetry, lightPattern: RevBlinkinLedDriver.BlinkinPattern) {
     telemetry.addData("Status", "NOT READY! WAIT FOR SOLID LIGHT . . . ")
     telemetry.update()
     robot = TurtleDozerAutoBot3(hardwareMap, telemetry)
-    robot.xPosition = startLocation.x
-    robot.yPosition = startLocation.y
-    robot.heading = robot.inertialMotionUnit.getHeading() + startHeading
-    robot.blinkyLights.setPattern(lightPattern)
-    robot.showStatus("Ready!")
-    robot.kennethClawLeft.direction = Servo.Direction.REVERSE
+    with(robot) {
+        xPosition = startLocation.x
+        yPosition = startLocation.y
+//        heading = inertialMotionUnit.getHeading() + startHeading
+        blinkyLights.setPattern(lightPattern)
+        showStatus("Ready!")
+        kennethClawLeft.direction = Servo.Direction.REVERSE
+    }
 }
 
-fun useTileGrid(xTile: Double, yTile: Double, speed: Double = 0.75): Vector {
-    return Vector(xTile * 24.0, yTile * 24.0, speed)
+fun useTileGrid(xTile: Double, yTile: Double, speed: Double = 0.75, name: String = "Unnamed Instruction Step"): AutonomousStep {
+    return AutonomousStep(xTile * 24.0, yTile * 24.0, speed, name)
 }
 
 fun go(telemetry: Telemetry) {
-
-    robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK)
-    robot.navigateTo(moveToViewNavTarget)
-//    robot.dozerBladePosition = 0.3
-//    Thread.sleep(1000)
-//    robot.navigateTo(alignWithFoundation)
-//    robot.fixTheHeading()
-//    robot.deployHook()
-//    Thread.sleep(500)
-//    robot.navigateTo(backUpToLatchFoundation)
-//    robot.dragWithVisualGuidance(foundationGoalLine)
-//    robot.unlatchHook()
-//    Thread.sleep(500)
-//    robot.navigateTo(slideLeftToGoAroundFoundation)
-//    robot.navigateTo(backUpAlongsideFoundation)
-//    robot.navigateTo(pushFoundationToRight)
-//    robot.navigateTo(parkUnderBridge)
-    robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.STROBE_WHITE)
-Thread.sleep(9000)
+    with(robot) {
+        desiredHeading = PI / 2.0
+        blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK)
+        drive(alignWithFoundation)
+        bumpDrive(bumpAudienceWall)
+        drive(reboundToAlignWithFoundation)
+        deployHook()
+        drive(backUpToLatchFoundation)
+        drive(dragFoundation)
+        unlatchHook()
+        drive(shiftTowardAudience)
+        drive(backUpToGoAroundFoundation)
+        rotateToHeading(PI)
+        drive(advanceAwayFromAudience)
+        drive(pushFoundationHome)
+        drive(parkUnderBridge)
+        kennethClawLeft.position = clawRestPosition
+        kennethClawRight.position = clawRestPosition
+        blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.TWINKLES_PARTY_PALETTE)
+    }
+    Thread.sleep(9000)
 }

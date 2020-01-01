@@ -15,7 +15,7 @@ class BasicForwardAutonomous : LinearOpMode() {
         initialize(hardwareMap,telemetry, RevBlinkinLedDriver.BlinkinPattern.GREEN)
 
         waitForStart()
-        val moveForward = Vector(0.0, 12.0 ,0.5,"Move Forward")
+        val moveForward = AutonomousStep(0.0, 12.0 ,0.5,"Move Forward")
         robot.driveByEncoder(moveForward)
     }
 
