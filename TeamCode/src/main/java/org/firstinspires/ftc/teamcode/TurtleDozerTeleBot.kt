@@ -18,22 +18,22 @@ class TurtleDozerTeleBot(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     private val leftFrontDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "leftFrontDrive")
     private val rightRearDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "rightRearDrive")
     private val leftRearDrive: DcMotor? = hardwareMap.get(DcMotor::class.java, "leftRearDrive")
-    val elevatorLowerLimitSwitch: DigitalChannel = hardwareMap.get<com.qualcomm.robotcore.hardware.DigitalChannel
+    private val elevatorLowerLimitSwitch: DigitalChannel = hardwareMap.get<com.qualcomm.robotcore.hardware.DigitalChannel
             >(com.qualcomm.robotcore.hardware.DigitalChannel::class.java,  "sensor_digital")
 
     val inertialMotionUnit: InertialMotionUnit = InertialMotionUnit(hardwareMap)
-    var parameters: Parameters = BNO055IMU.Parameters()
+    var parameters: Parameters = Parameters()
 
     init {
-        parameters.angleUnit = com.qualcomm.hardware.bosch.BNO055IMU.AngleUnit.DEGREES
-        parameters.accelUnit = com.qualcomm.hardware.bosch.BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC
         parameters.calibrationDataFile = "BNO055IMUCalibration.json"
         parameters.loggingEnabled = true
         parameters.loggingTag = "IMU"
         parameters.accelerationIntegrationAlgorithm = com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator()
         kennethClawLeft.direction = Servo.Direction.REVERSE
         kennethElevator.direction = DcMotorSimple.Direction.REVERSE
-        elevatorLowerLimitSwitch.setMode(com.qualcomm.robotcore.hardware.DigitalChannel.Mode.INPUT)
+        elevatorLowerLimitSwitch.setMode(DigitalChannel.Mode.INPUT)
     }
 
     var heading = 0.0
@@ -61,28 +61,18 @@ class TurtleDozerTeleBot(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         if (leftRearDrive != null) {
             leftRearDrive.power = xSpeedScaled - ySpeedScaled - command.rotationSpeed
         }
-//        telemetry.addData("Heading", heading * 180 / PI)
-//        telemetry.addData("setDriveMotion", command)
-//        telemetry.update()
     }
 
     fun deployHook() {
         if (tailHook != null) {
             tailHook.position = 0.0
         }
-        showStatus("Hook deployed")
     }
 
     fun unlatchHook() {
         if (tailHook != null) {
             tailHook.position = 0.5
         }
-        showStatus("Hook unlatched")
-    }
-
-    fun showStatus(string: String) {
-        telemetry.addData("Status", string)
-        telemetry.update()
     }
 
     fun stopAllMotors() {

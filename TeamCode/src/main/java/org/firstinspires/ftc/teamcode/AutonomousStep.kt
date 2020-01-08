@@ -1,10 +1,16 @@
 package org.firstinspires.ftc.teamcode
 
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-class AutonomousStep(var x: Double, var y: Double, val speed: Double = 0.75, val name: String = "Unnamed AutonomousStep") {
+class AutonomousStep(
+        var x: Double,
+        var y: Double,
+        val speed: Double = 0.75,
+        val name: String = "Unnamed AutonomousStep",
+        val desiredHeading: Double = PI / 2.0) {
 
 
     override fun toString(): String {

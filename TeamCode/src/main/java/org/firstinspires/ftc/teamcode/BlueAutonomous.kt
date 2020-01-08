@@ -12,7 +12,10 @@ class BlueAutonomous : LinearOpMode() {
 
     override fun runOpMode() {
 
+
+
         initialize(hardwareMap,telemetry, RevBlinkinLedDriver.BlinkinPattern.BLUE)
+        checkList(telemetry,gamepad1,gamepad2, RevBlinkinLedDriver.BlinkinPattern.BLUE)
 
         waitForStart()
 

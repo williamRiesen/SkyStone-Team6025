@@ -34,6 +34,11 @@ class InertialMotionUnit(hardwareMap: HardwareMap) {
         return -angles.firstAngle
     }
 
-    fun getAcceleration()
-            = imu.linearAcceleration.xAccel.absoluteValue + imu.linearAcceleration.yAccel.absoluteValue
+    val xAccel
+        get() = imu.linearAcceleration.xAccel
+
+    val yAccel
+        get() = imu.linearAcceleration.yAccel
+
+    fun getAcceleration() = imu.linearAcceleration.xAccel.absoluteValue + imu.linearAcceleration.yAccel.absoluteValue
 }

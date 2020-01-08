@@ -30,7 +30,7 @@ val headingTolerance = PI / 90.0
 val clawRestPosition = 0.35
 
 class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
-    private val visualNavigator = VisualNavigator(hardwareMap)
+    //    private val visualNavigator = VisualNavigator(hardwareMap)
     val inertialMotionUnit: InertialMotionUnit = InertialMotionUnit(hardwareMap)
     //    var parameters: BNO055IMU.Parameters = BNO055IMU.Parameters()
     private val tailHook: Servo? = hardwareMap.get(Servo::class.java, "tailhook")
@@ -51,40 +51,15 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     var priorHeading = 0.0
     private val mmPerInch = 25.4
     private val allMotors = listOf(rightFrontDrive, leftFrontDrive, rightRearDrive, leftRearDrive)
-    var desiredHeading = PI / 2.0
+//    var desiredHeading = PI / 2.0
     private val driftAngleTolerance = PI / 18.0
     private val slideIncrement = 2.0
     private val slightSlideIncrement = 1.0
     private val timer = ElapsedTime()
+    private var accel = 0.0
+    private var xAccel = 0.0
+    private var yAccel = 0.0
     var driveCommand = DriveCommand(0.0, 0.0, 0.0)
-
-    fun sightDriveTo(target: AutonomousStep){
-        updateSighting()
-        xTarget = target.x
-        yTarget = target.y
-        for (motor in allMotors) {
-            motor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-            motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
-        }
-        updateSighting()
-        telemetry.addData("xPosition", xPosition)
-        telemetry.addData("xTarget",xTarget)
-        telemetry.addData("yPosition",yPosition)
-        telemetry.addData("yTarget",yTarget)
-        telemetry.update()
-//        while (!atTarget) {
-//            val desiredHeading = PI / 2.0
-//            val rotation = heading - desiredHeading
-//            val bearing = atan2(yTarget - yPosition, xTarget - xPosition)
-//            moveOnFieldCommand = DriveCommand(0.0, target.speed, -rotation).rotated(bearing)
-//            driveCommand = moveOnFieldCommand.rotated(-heading)
-//            setDriveMotion(driveCommand)
-//            updateSighting()
-//            telemetry.update()
-//        }
-        setDriveMotion(STOP)
-
-    }
 
     fun bumpDrive(autonomousStep: AutonomousStep) {
         for (motor in allMotors) {
@@ -94,31 +69,43 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         if (autonomousStep.length != 0.0) {
             val runDuration = autonomousStep.length / (autonomousStep.speed * INCHES_PER_SEC_PER_POWER_UNIT)
             val runTimer = ElapsedTime()
-            var accel = robot.inertialMotionUnit.getAcceleration()
+            accel = inertialMotionUnit.getAcceleration()
+            xAccel = inertialMotionUnit.xAccel
+            yAccel = inertialMotionUnit.yAccel
             driveCommand = DriveCommand(
                     xSpeed = autonomousStep.x * autonomousStep.speed / autonomousStep.length,
                     ySpeed = autonomousStep.y * autonomousStep.speed / autonomousStep.length,
                     rotationSpeed = 0.0)
 
-            while (runTimer.seconds() < 0.5 || (runTimer.seconds() < runDuration && accel < 1.25)) {
-                driveCommand.rotationSpeed = (desiredHeading - robot.heading)
+            while (runTimer.seconds() < 0.5 || (runTimer.seconds() < runDuration && xAccel > -0.75)) {
+                driveCommand.rotationSpeed = (autonomousStep.desiredHeading - robot.heading)
                 setDriveMotion(driveCommand)
-                accel = robot.inertialMotionUnit.getAcceleration()
-                if (accel >= 1.25) blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE)
-                Thread.sleep(50)
-                blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK)
+                updateAccelLights()
             }
         }
         setDriveMotion(STOP)
     }
 
+    private fun updateAccelLights() {
+        accel = inertialMotionUnit.getAcceleration()
+        xAccel = inertialMotionUnit.xAccel
+        yAccel = inertialMotionUnit.yAccel
+
+        if (xAccel > 0.25) blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.RED)
+        if (xAccel < -0.25) blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLUE)
+        if (yAccel > 0.25) blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.YELLOW)
+        if (yAccel < -0.25) blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN)
+        Thread.sleep(50)
+        blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK)
+    }
+
     fun rotateToHeading(radians: Double) {
-        desiredHeading = radians
-        while ((desiredHeading - heading).absoluteValue > headingTolerance) {
+        val targetHeading = radians
+        while ((targetHeading - heading).absoluteValue > headingTolerance) {
             setDriveMotion(DriveCommand(
                     xSpeed = 0.0,
                     ySpeed = 0.0,
-                    rotationSpeed = (desiredHeading - heading) * ROTATION_SPEED_ADJUST))
+                    rotationSpeed = (targetHeading - heading) * ROTATION_SPEED_ADJUST))
         }
         setDriveMotion(STOP)
     }
@@ -144,11 +131,11 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
 
     }
 
-    private fun tryStraightPull(yGoalLine: Double): PullOutcome {
+    private fun tryStraightPull(yGoalLine: Double, desiredHeading: Double = PI/2.0): PullOutcome {
         var pullOutcome: PullOutcome? = null
         setDriveMotion(FORWARD)
         while (pullOutcome == null) {
-            updateSighting()
+            updateReckoning()
             pullOutcome = when {
                 (yPosition - yGoalLine).absoluteValue < arrivalTolerance -> PullOutcome.GOAL_LINE_REACHED
                 (heading - desiredHeading) > driftAngleTolerance -> PullOutcome.DRIFTED_COUNTERCLOCKWISE
@@ -160,13 +147,13 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         return pullOutcome
     }
 
-    private fun tryTrimClockwisePull(yGoalLine: Double): PullOutcome {
+    private fun tryTrimClockwisePull(yGoalLine: Double,desiredHeading: Double = PI/2.0): PullOutcome {
         slideOver(slideIncrement)
         var pullOutcome: PullOutcome? = null
         val savedHeading = heading
         setDriveMotion(FORWARD)
         while (pullOutcome == null) {
-            updateSighting()
+            updateReckoning()
             pullOutcome = when {
                 (yPosition - yGoalLine).absoluteValue < arrivalTolerance -> PullOutcome.GOAL_LINE_REACHED
                 (savedHeading - heading) > driftAngleTolerance -> PullOutcome.DRIFTED_COUNTERCLOCKWISE
@@ -178,13 +165,13 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         return pullOutcome
     }
 
-    private fun tryTrimCounterClockwisePull(yGoalLine: Double): PullOutcome {
+    private fun tryTrimCounterClockwisePull(yGoalLine: Double,desiredHeading: Double = PI/2.0): PullOutcome {
         slideOver(-slideIncrement)
         var pullOutcome: PullOutcome? = null
         priorHeading = heading
         setDriveMotion(FORWARD)
         while (pullOutcome == null) {
-            updateSighting()
+            updateReckoning()
             pullOutcome = when {
                 (yPosition - yGoalLine).absoluteValue < arrivalTolerance -> PullOutcome.GOAL_LINE_REACHED
                 (heading - priorHeading) > driftAngleTolerance -> PullOutcome.DRIFTED_CLOCKWISE
@@ -196,14 +183,14 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         return pullOutcome
     }
 
-    private fun tryReducedTrimPull(yGoalLine: Double): PullOutcome {
+    private fun tryReducedTrimPull(yGoalLine: Double,desiredHeading: Double = PI/2.0): PullOutcome {
         if (priorHeading > desiredHeading) slideOver(slightSlideIncrement)
         else slideOver(-slightSlideIncrement)
 
         var pullOutcome: PullOutcome? = null
         setDriveMotion(FORWARD)
         while (pullOutcome == null) {
-            updateSighting()
+            updateReckoning()
             pullOutcome = when {
                 (yPosition - yGoalLine).absoluteValue < arrivalTolerance -> PullOutcome.GOAL_LINE_REACHED
                 (heading - desiredHeading) > driftAngleTolerance -> PullOutcome.DRIFTED_COUNTERCLOCKWISE
@@ -226,11 +213,11 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
 
     fun driveByEncoder(autonomousStep: AutonomousStep) {
 
-        // ration of motor speeds should be in proportion to the distance needed to travel
+        // ratio of motor speeds should be in proportion to the distance needed to travel
         // creating a diagonal motion and simultaneous arrival.
         // speeds should be scaled such that robot movement looks like
         // speed is equivalent to power setting 1.0 in the direction of movement.
-        //
+
         val x = autonomousStep.x * TICKS_PER_INCH
         val y = autonomousStep.y * TICKS_PER_INCH
         val speed = autonomousStep.speed
@@ -353,14 +340,9 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
                     rotationSpeed = 0.0)
 
             while (runTimer.seconds() < runDuration) {
-                driveCommand.rotationSpeed = (desiredHeading - robot.heading)
+                driveCommand.rotationSpeed = (autonomousStep.desiredHeading - robot.heading)
                 setDriveMotion(driveCommand)
-                val accel = robot.inertialMotionUnit.getAcceleration()
-                if (accel > 1.25) blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.WHITE)
-                telemetry.addData("Accel",accel)
-                telemetry.update()
-                Thread.sleep(50)
-                blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.BLACK)
+                updateAccelLights()
             }
         }
         setDriveMotion(STOP)
@@ -372,19 +354,6 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
     private var leftRearLastPosition = 0
     private var timeOfLastPositionPlot = 0.0
 
-    fun updateSighting(): Boolean {
-        val position = visualNavigator.getCurrentPosition()
-        if (position == null) return false
-        else {
-            val translation = position.translation
-            xPosition = translation.get(0) / mmPerInch
-            yPosition = translation.get(1) / mmPerInch
-            // express the rotation of the robot in degrees.
-            val rotation: Orientation = Orientation.getOrientation(position, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS)
-//            heading = rotation.thirdAngle.toDouble()
-            return true
-        }
-    }
 
 
     fun navigateTo(autonomousStep: AutonomousStep) {
@@ -415,13 +384,6 @@ class TurtleDozerAutoBot3(hardwareMap: HardwareMap, val telemetry: Telemetry) {
         setDriveMotion(STOP)
 
     }
-
-    fun stopAllMotors() {
-        for (motor in allMotors) {
-            motor.power = 0.0
-        }
-    }
-
 
     private val atTarget
         get() =

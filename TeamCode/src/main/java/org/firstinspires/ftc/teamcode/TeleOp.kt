@@ -9,9 +9,6 @@ import com.qualcomm.robotcore.util.ElapsedTime
 @TeleOp(name = "TeleOp", group = "TurtleDozer.")
 class TeleOp : OpMode() {
     lateinit var robot: TurtleDozerTeleBot
-    private val dozerBladeNeutralPosition = 0.3
-    private val dozerBladeLowerLimit = 0.125
-    private val dozerBladeUpperLimit = 0.6
     private val timer = ElapsedTime()
     private var timeStamp = timer.milliseconds()
     private var allianceIsBlue = false
@@ -20,14 +17,13 @@ class TeleOp : OpMode() {
     private var elevatorIsCalibrated = false
     private var elevatorIsAtTopLimit = false
     private val elevatorTopLimit = 8800.0
-    val clawReductionFactor = 0.5
+    private val clawReductionFactor = 0.5
 
     private val waggleInPosition = clawRestPosition
     private val waggleOutPosition = clawRestPosition + 0.4
 
     override fun init() {
         robot = TurtleDozerTeleBot(hardwareMap, telemetry)
-//        robot.dozerBladePosition = dozerBladeNeutralPosition
         robot.blinkyLights.setPattern(RevBlinkinLedDriver.BlinkinPattern.GREEN)
         timer.reset()
     }
